@@ -41,8 +41,7 @@ import module namespace batch_delete_attributes = 'http://test/xaws/sdb/particul
 import module namespace delete_domain = 'http://test/xaws/sdb/particular_tests/delete_domain' at "particular_tests/delete_domain.xq"; 
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
+import module namespace hash = "http://www.zorba-xquery.com/modules/cryptography/hash";
 
 (:
 ********** CONFIGURATION AREA **********
@@ -204,4 +203,4 @@ delete_domain:run($testconfig,$testresult);
 
 (: ************************************************************************************** :)
 
-$testresult;
+$testresult

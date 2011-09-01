@@ -27,8 +27,7 @@
 module namespace error = 'http://www.xquery.me/modules/xaws/s3/error';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace common_error = 'http://www.xquery.me/modules/xaws/helpers/error' at '../helpers/error.xq';
+import module namespace common_error = 'http://www.xquery.me/modules/xaws/helpers/error';
 
 (: Error declarations for user convenience. Variables can be used to catch specific errors :)
 declare variable $error:ACCESSDENIED as xs:QName := xs:QName("error:ACCESSDENIED");

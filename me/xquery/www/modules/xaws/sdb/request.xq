@@ -23,13 +23,11 @@
  :)
 module namespace request = 'http://www.xquery.me/modules/xaws/sdb/request';
 
-import module namespace util = 'http://www.xquery.me/modules/xaws/helpers/utils' at '../helpers/utils.xq';
-import module namespace common_request = 'http://www.xquery.me/modules/xaws/helpers/request' at '../helpers/request.xq';
-
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace base64 = "http://www.zorba-xquery.com/modules/base64";
-import module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error' at '../sdb/error.xq';
+import module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error';
+
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 
 (:~
  : send an http request and return the response which is usually a pair of two items: One item containing the response
@@ -37,7 +35,7 @@ import module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error' at
  :
  : @return the http response
 :)
-declare sequential function request:send($request as element(http:request)) as item()* {
+declare %ann:sequential function request:send($request as element(http:request)) as item()* {
 
     let $response := http:send-request($request)
     let $status := number($response[1]/@status)
@@ -45,5 +43,5 @@ declare sequential function request:send($request as element(http:request)) as i
         
         if($status = (200,204)) 
         then $response
-        else error:throw($status,$response);
+        else error:throw($status,$response)
 };

@@ -43,48 +43,46 @@ import module namespace topic = 'http://www.xquery.me/modules/xaws/sns/topic' at
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 import module namespace util = 'http://www.xquery.me/modules/xaws/helpers/utils' at '/uk/co/xquery/www/modules/xaws/helpers/utils.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sns.amazonaws.com/doc/2010-03-31/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sns_publish";
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sns_publish";
     
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
-    declare $topic-arn := string($testconfig/topic-arn/text());
-    declare $message := string($testconfig/message/text());
-    declare $subject := string($testconfig/subject/text());
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $topic-arn := string($testconfig/topic-arn/text());
+    variable $message := string($testconfig/message/text());
+    variable $subject := string($testconfig/subject/text());
         
-    declare $response;
+    variable $response;
     
     try {
         
         (: send the message :)
-        set $response := topic:publish($aws-key, $aws-secret, $topic-arn, $message, $subject);
+         $response := topic:publish($aws-key, $aws-secret, $topic-arn, $message, $subject);
         
         (: Only if an MessageID is returned, AWS will try to deliver the message shortly :)
         if (data($response//aws:MessageId[text()]))
         then
-            block {
-                set $success := true();
-                set $msg := "MessageID created and AWS will try to deliver the message shortly";
+            {
+                $success := true();
+                $msg := "MessageID created and AWS will try to deliver the message shortly";
             }
         else
-            set $msg := "MessageID wasn´t created, the message won´t be published";
+            $msg := "MessageID wasn´t created, the message won´t be published";
                 
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
    
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
                         <result>{$msg}</result>
                     </particular_test>
     ) as last into $testresult;
-    $testresult;
+    $testresult
 };

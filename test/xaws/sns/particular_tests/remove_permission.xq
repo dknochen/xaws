@@ -33,33 +33,35 @@ import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
 
 declare namespace aws = "http://sns.amazonaws.com/doc/2010-03-31/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sns_remove_permission";
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sns_remove_permission";
     
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
-    declare $topic-arn := string($testconfig/topic-arn/text());
-    declare $label := string($testconfig/label/text());
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $topic-arn := string($testconfig/topic-arn/text());
+    variable $label := string($testconfig/label/text());
     
     try {
         
         (: remove permission :)
         topic:remove-permission($aws-key, $aws-secret, $topic-arn, $label);
         
-        set $success := true();
-        set $msg := "The permission was successfully removed";
+        $success := true();
+        $msg := "The permission was successfully removed";
                 
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
    
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
                         <result>{$msg}</result>
                     </particular_test>
     ) as last into $testresult;
-    $testresult;
+    $testresult
 };

@@ -23,7 +23,7 @@
  :)
 module namespace error = 'http://www.xquery.me/modules/xaws/sns/error';
 
-import module namespace common_error = 'http://www.xquery.me/modules/xaws/helpers/error' at '../helpers/error.xq';
+import module namespace common_error = 'http://www.xquery.me/modules/xaws/helpers/error';
 
 (: Error declarations for user convenience. Variables can be used to catch specific errors :)
 declare variable $error:AUTHORIZATIONERROR as xs:QName := xs:QName("error:AUTHORIZATIONERROR");

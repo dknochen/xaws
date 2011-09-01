@@ -28,20 +28,18 @@ module namespace test = 'http://test/xaws/sdb/particular_tests/get_attributes';
 import module namespace domain = 'http://www.xquery.me/modules/xaws/sdb/domain' at '/uk/co/xquery/www/modules/xaws/sdb/domain.xq';
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sdb.amazonaws.com/doc/2009-04-15/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sdb_get_attributes";
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
-    declare $domain-name := string($testconfig/domain-name/text());
-    declare $item-name := string($testconfig/item-name/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sdb_get_attributes";
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $domain-name := string($testconfig/domain-name/text());
+    variable $item-name := string($testconfig/item-name/text());
     
     try {
         (: get all attributes for the specified item :)
@@ -49,12 +47,12 @@ declare sequential function test:run($testconfig as element(config),$testresult 
         
         return 
             (: save the (formatted) list in the testresult-message :)
-            set $msg := $result//aws:GetAttributesResult;
-            set $success := true();
+            $msg := $result//aws:GetAttributesResult;
+            $success := true();
             
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
     
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
@@ -62,5 +60,5 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                     </particular_test>
     ) as last into $testresult;
     
-    $testresult;
+    $testresult
 };

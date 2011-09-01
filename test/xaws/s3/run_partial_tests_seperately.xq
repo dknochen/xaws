@@ -26,8 +26,8 @@ import module namespace bucket_list_objects = 'http://test/xaws/s3/particular_te
 import module namespace object_write_read_copy = 'http://test/xaws/s3/particular_tests/object_write_read_copy' at "particular_tests/object_write_read_copy.xq";
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
+import module namespace hash = "http://www.zorba-xquery.com/modules/cryptography/hash";
+import module namespace ref = "http://www.zorba-xquery.com/modules/reflection";
 
 (:
     set as interpreter arguments in run configuration, e.g.:
@@ -60,6 +60,6 @@ let $exec_code :=
         ""
     )
 return
-   eval {$exec_code};    
+   ref:eval($exec_code);    
 
-$testresult;
+$testresult

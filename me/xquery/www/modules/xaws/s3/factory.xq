@@ -24,9 +24,9 @@
 module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-import module namespace base64 = "http://www.zorba-xquery.com/modules/base64";
+import module namespace hash = "http://www.zorba-xquery.com/modules/cryptography/hash";
+import module namespace base64 = "http://www.zorba-xquery.com/modules/converters/base64";
+import module namespace error = 'http://www.xquery.me/modules/xaws/s3/error';
 
 import module namespace date = "http://www.zorba-xquery.com/modules/datetime";
 
@@ -80,9 +80,9 @@ declare function factory:s3-object ($key as xs:string,
                                         attribute method {"xml"} )
                 case document-node() return ( attribute media-type {"text/xml"},
                                               attribute method {"xml"} )
-                case xs:base64Binary return return ( attribute media-type {"binary/octet-stream"},
+                case xs:base64Binary return ( attribute media-type {"binary/octet-stream"},
                                                      attribute method {"binary"} )
-                case xs:binary return return ( attribute media-type {"binary/octet-stream"},
+                case xs:hexBinary return ( attribute media-type {"binary/octet-stream"},
                                                attribute method {"binary"} )
                 case empty-sequence() return ()
                 default return error(

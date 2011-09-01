@@ -24,13 +24,13 @@
 module namespace object = 'http://www.xquery.me/modules/xaws/s3/object';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 
-import module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request';
-import module namespace s3_request = 'http://www.xquery.me/modules/xaws/s3/request';
-import module namespace error = 'http://www.xquery.me/modules/xaws/s3/error';
-import module namespace response = 'http://www.xquery.me/modules/xaws/helpers/response';
 import module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory';
+import module namespace request = 'http://www.xquery.me/modules/xaws/s3/request';
+import module namespace request_helper = 'http://www.xquery.me/modules/xaws/helpers/request';
+
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 
 (:~ 
  : Remove an object from a bucket of a user. The user is authenticated with the aws-config. If the bucket is versioned
@@ -74,18 +74,18 @@ import module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory'
  :                   The first two calls are equivalent to function calls 3 and 4 in the above example. 
  : @return returns the http-response information (header, statuscode,...) 
 :)
-declare sequential function object:delete(
+declare %ann:sequential function object:delete(
     $aws-config as element(aws-config),
     $s3-object as element(object:s3-object)
 ) as item()* {
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $request := if($s3-object/@version)
-                    then request:create("DELETE",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
-                    else request:create("DELETE",$href)
+                    then request_helper:create("DELETE",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
+                    else request_helper:create("DELETE",$href)
     return 
-        s3_request:send($aws-config,$request,$bucket,$s3-object/@key)
+        request:send($aws-config,$request,$bucket,$s3-object/@key)
 };
 
 (:
@@ -145,21 +145,21 @@ declare sequential function object:delete(
  : @return returns a pair of 2 items. The first is the http response information (header, statuscode, ...); the second is the 
  :         s3-object containing the data as xml, string (text), or xs:base64Binary.
 :)
-declare sequential function object:read(
+declare %ann:sequential function object:read(
     $aws-config as element(aws-config),
     $s3-object as element(object:s3-object)
 ) as item()* {
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $request := if($s3-object/@version)
-                    then request:create("GET",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
-                    else request:create("GET",$href)
-    let $response := s3_request:send($request)
+                    then request_helper:create("GET",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
+                    else request_helper:create("GET",$href)
+    let $response := 1 (: request:send($request) :) (: TODO :)
     let $metadata :=
         <metadata>
         {
-            for $header in $response/http:header[startswith(@name,"x-amz-meta-")]
+            for $header in $response/http:header[starts-with(@name,"x-amz-meta-")]
             let $name := substring-after($header/@name,"x-amz-meta-")
             let $values := tokenize(string($header/@value),",")
             for $value in $values
@@ -231,21 +231,21 @@ declare sequential function object:read(
  : @return returns a pair of 2 items. The first is the http response information (header, statuscode, ...); the second is the 
  :         s3-object containing the metadata of that object.
 :)
-declare sequential function object:metadata(
+declare %ann:sequential function object:metadata(
     $aws-config as element(aws-config),
     $s3-object as element(object:s3-object)
 ) as item()* {
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $request := if($s3-object/@version)
-                    then request:create("HEAD",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
-                    else request:create("HEAD",$href)
-    let $response := s3_request:send($request)
+                    then request_helper:create("HEAD",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
+                    else request_helper:create("HEAD",$href)
+    let $response := 1 (: request:send($request) :) (: TODO :)
     let $metadata :=
         <metadata>
         {
-            for $header in $response/http:header[startswith(@name,"x-amz-meta-")]
+            for $header in $response/http:header[starts-with(@name,"x-amz-meta-")]
             let $name := substring-after($header/@name,"x-amz-meta-")
             let $values := tokenize(string($header/@value),",")
             for $value in $values
@@ -294,16 +294,20 @@ declare sequential function object:metadata(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         item is the base64 encoded torrent file of the object
 :)
-declare sequential function object:torrent(
+declare %ann:sequential function object:torrent(
     $aws-config as element(aws-config),
     $s3-object as element(object:s3-object)
 ) as item()* {
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
-    let $request := request:create("GET",$href,<parameter name="torrent" />)
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $request := request_helper:create("GET",$href,<parameter name="torrent" />)
     return 
-        s3_request:send($request)
+      1
+    (:
+        TODO 
+        request:send($request)
+    :)
 };
 
 (:~
@@ -377,14 +381,14 @@ declare sequential function object:torrent(
  : @return returns the http reponse data (headers, statuscode,...). The header list contains eventually an x-amz-version-id attribute
  :         if versioning is turned on for the target bucket.
 :)
-declare sequential function object:write(
+declare %ann:sequential function object:write(
     $aws-config as element(aws-config),
     $s3-object as element(s3-object),
     $reduced-redundancy as xs:boolean?
 ) as item()* {
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $headers := (
             (: TODO add content lenght and content md5 :)
             if($reduced-redundancy) then <header name="x-amz-storage-class" value="REDUCED_REDUNDANCY" /> else (),
@@ -400,9 +404,12 @@ declare sequential function object:write(
     let $serialize-method := ($s3-object/object:content/@method,"binary")[1]
     let $content := $s3-object/object:content/node()
     
-    let $request := request:create("PUT",$href,()(:no parameters:), $headers, $media-type, $serialize-method, $content)
+    let $request := request_helper:create("PUT",$href,()(:no parameters:), $headers, $media-type, $serialize-method, $content)
     return 
-       s3_request:send($request)[1]
+      1
+      (: TODO
+       request:send($request)[1]
+       :)
 };
 
 (:~
@@ -469,19 +476,22 @@ declare sequential function object:write(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is an AccessControlPolicy element
 :)
-declare sequential function object:permissions(
+declare %ann:sequential function object:permissions(
     $aws-config as element(aws-config),
     $s3-object as element(object:s3-object)
 ) as item()* {
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $parameters := (if($s3-object/@version)
                         then <parameter name="versionId" value="{$s3-object/@version}" /> else (),
                         <parameter name="acl" />)
-    let $request := request:create("GET",$href,$parameters)
+    let $request := request_helper:create("GET",$href,$parameters)
     return 
-        s3_request:send($request)
+      1
+      (: TODO
+        request:send($request)
+      :)
 };
 
 (:~
@@ -544,13 +554,13 @@ declare sequential function object:permissions(
 :)
 (: TODO this needs to be tested. I don't think that it works this way
         also the example is not correct: two items should be returned :)
-declare sequential function object:permission-set(
+declare %ann:sequential function object:permission-set(
     $aws-config as element(aws-config),
     $s3-object as element(object:s3-object)
 ) as item()* {    
 
     let $bucket as xs:string := if($s3-object/@bucket)then $s3-object/@bucket else string($aws-config/context-bucket/text())
-    let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
+    let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $parameters := (if($s3-object/@version)
                         then <parameter name="versionId" value="{$s3-object/@version}" /> else (),
                         <parameter name="acl" />)
@@ -564,15 +574,18 @@ declare sequential function object:permission-set(
                 <Grant>
                     <Grantee xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                              xsi:type="Group">
-                        <URI>http://acs.amazonaws.com/groups/global/AuthenticatedUsers<URI>
+                        <URI>http://acs.amazonaws.com/groups/global/AuthenticatedUsers</URI>
                     </Grantee>
                     <Permission>{string($s3-object/@permission)}</Permission>
                 </Grant>
             </AccessControlList>
         </AccessControlPolicy>
-    let $request := request:create("PUT",$href,$parameters,()(:no headers:),"application/xml","xml",$acl)
+    let $request := request_helper:create("PUT",$href,$parameters,()(:no headers:),"application/xml","xml",$acl)
     return 
-        (s3_request:send($request)[1], $acl)
+      (: TODO
+        (request:send($request)[1], $acl)
+      :)
+      1
 };
 
 (:~
@@ -616,7 +629,6 @@ declare sequential function object:permission-set(
  :                                                                 version="UIORUnfndfiufdisojhr398493jfdkjFJjkndnqUifhnw89493jJFJ"
  :                                                                 permisstion="{$const:ACL-GRANT-PUBLIC-READ}" />);
  :
- :                         (: is equivalent to :)
  :                         object:permission-set($aws-config,
  :                                               factory:s3-object("test.xml",
  :                                                                 "{$bucket}", 
@@ -637,7 +649,7 @@ declare sequential function object:permission-set(
  :         is the AccessControlPolicy element that has been set for the object (contains all granted access rights)
 :)
 (: TODO this needs to be tested. I don't think that it works this way :)
-declare sequential function object:grant-permission(
+declare %ann:sequential function object:grant-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $bucket as xs:string,
@@ -647,11 +659,11 @@ declare sequential function object:grant-permission(
 ) as item()* {    
 
     let $href as xs:string := concat("http://", $bucket, ".s3.amazonaws.com/", $key)
-    let $request := request:create("PUT",$href,<parameter name="acl" />)
+    let $request := request_helper:create("PUT",$href,<parameter name="acl" />)
     return 
-        block{
+      {
             (: get the current acl of the object :)
-            declare $access-control-policy := object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key);
+            variable $access-control-policy := 1; (: TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key); :)
             
             (: modify policy: add or update grant :)
             let $current-grant := 
@@ -660,13 +672,13 @@ declare sequential function object:grant-permission(
             return
                 if($current-grant)
                 then
-                    replace value of node $current-grant/Permission with $permission
+                    replace value of node $current-grant/Permission with $permission;
                 else insert node 
                         factory:config-grant($grantee,$permission) 
                      as last into $access-control-policy/AccessControlPolicy/AccessControlList; 
                 
             (: add acl config body :)
-            s3_request:add-acl-grantee($request,$access-control-policy);
+            request:add-acl-grantee($request,$access-control-policy);
             
             (: sign the request :)
             request:sign(
@@ -676,8 +688,8 @@ declare sequential function object:grant-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            (s3_request:send($request),$access-control-policy);
-        }
+            (:request_helper:send($request),$access-control-policy) :)
+     }
 };
 
 
@@ -700,7 +712,7 @@ declare sequential function object:grant-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the AccessControlPolicy element that has been set for the bucket (contains all granted access rights)
 :)
-declare sequential function object:remove-permission(
+declare %ann:sequential function object:remove-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $bucket as xs:string,
@@ -709,11 +721,11 @@ declare sequential function object:remove-permission(
 ) as item()* {    
 
     let $href as xs:string := concat("http://", $bucket, ".s3.amazonaws.com/",$key)
-    let $request := request:create("PUT",$href,<parameter name="acl" />)
+    let $request := request_helper:create("PUT",$href,<parameter name="acl" />)
     return 
-        block{
+      {
             (: get the current acl of the object :)
-            declare $access-control-policy := object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key);
+            variable $access-control-policy := 1 (: TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key); :);
             
             (: modify policy: remove grant :)
             let $current-grant := 
@@ -722,11 +734,11 @@ declare sequential function object:remove-permission(
             return
                 if($current-grant)
                 then
-                    delete node $current-grant
+                    delete node $current-grant;
                 else (); 
                 
             (: add acl config body :)
-            s3_request:add-acl-grantee($request,$access-control-policy);
+            request:add-acl-grantee($request,$access-control-policy);
             
             (: sign the request :)
             request:sign(
@@ -736,8 +748,8 @@ declare sequential function object:remove-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            (s3_request:send($request),$access-control-policy);
-        }
+            (: TODO request:send($request),$access-control-policy:)
+      }
 };
 
 
@@ -756,7 +768,7 @@ declare sequential function object:remove-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the AccessControlPolicy element that has been set for the bucket (contains all granted access rights)
 :)
-declare sequential function object:remove-permission(
+declare %ann:sequential function object:remove-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $bucket as xs:string,
@@ -766,15 +778,15 @@ declare sequential function object:remove-permission(
 ) as item()* {    
 
     let $href as xs:string := concat("http://", $bucket, ".s3.amazonaws.com/",$key)
-    let $request := request:create(
+    let $request := request_helper:create(
                                     "PUT",
                                     $href,
                                     (<parameter name="acl" />,<parameter name="versionId" value="{$version-id}" />)
                                   )
     return 
-        block{
+      {
             (: get the current acl of the object version :)
-            declare $access-control-policy := object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key,$version-id);
+            variable $access-control-policy := 1 (: TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key,$version-id); :);
             
             (: modify policy: remove grant :)
             let $current-grant := 
@@ -783,11 +795,11 @@ declare sequential function object:remove-permission(
             return
                 if($current-grant)
                 then
-                    delete node $current-grant
+                    delete node $current-grant;
                 else (); 
                 
             (: add acl config body :)
-            s3_request:add-acl-grantee($request,$access-control-policy);
+            request:add-acl-grantee($request,$access-control-policy);
             
             (: sign the request :)
             request:sign(
@@ -797,8 +809,8 @@ declare sequential function object:remove-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            (s3_request:send($request),$access-control-policy);
-        }
+            (:request:send($request),$access-control-policy:)
+      }
 };
 
 (:~
@@ -815,7 +827,7 @@ declare sequential function object:remove-permission(
  : @param $target-key the key of the object to copy to
  : @return returns the http reponse data (headers, statuscode,...)
 :)
-declare sequential function object:copy(
+declare %ann:sequential function object:copy(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $bucket as xs:string,
@@ -849,7 +861,7 @@ declare sequential function object:copy(
  : @param $target-key the key of the object to copy to
  : @return returns the http reponse data (headers, statuscode,...)
 :)
-declare sequential function object:copy(
+declare %ann:sequential function object:copy(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $source-bucket as xs:string,
@@ -907,7 +919,7 @@ declare sequential function object:copy(
  :                            $reduced-redundancy is turned off.
  : @return returns the http reponse data (headers, statuscode,...)
 :)
-declare sequential function object:copy(
+declare %ann:sequential function object:copy(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $source-bucket as xs:string,
@@ -970,7 +982,7 @@ declare sequential function object:copy(
  : @param $version-id the version id of the source object to be copied 
  : @return returns the http reponse data (headers, statuscode,...)
 :)
-declare sequential function object:copy(
+declare %ann:sequential function object:copy(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $source-bucket as xs:string,
@@ -987,18 +999,19 @@ declare sequential function object:copy(
     let $request := 
         if ($version-id) 
         then
-            request:create("PUT",$href,<parameter name="versionId" value="{$version-id}" />)
+            request_helper:create("PUT",$href,<parameter name="versionId" value="{$version-id}" />)
         else
-            request:create("PUT",$href)
+            request_helper:create("PUT",$href)
     return 
-        block{
-            (
-                s3_request:add-acl-everybody($request,$acl),
-                s3_request:add-metadata($request,$metadata/*),
-                s3_request:add-copy-source($request,$source-bucket,$source-key),
-                if($metadata) then s3_request:add-replace-metadata-flag($request) else (),
-                if($reduced-redundancy)then s3_request:add-reduced-redundancy($request) else ()
+      {
+            (: TODO
+                request:add-acl-everybody($request,$acl),
+                request:add-metadata($request,$metadata/*),
+                request:add-copy-source($request,$source-bucket,$source-key),
+                if($metadata) then request:add-replace-metadata-flag($request) else (),
+                if($reduced-redundancy)then  TODO request:add-reduced-redundancy($request) else ()
             );
+            :)
                 
             (: sign the request :)
             request:sign(
@@ -1008,6 +1021,6 @@ declare sequential function object:copy(
                 $aws-access-key,
                 $aws-secret);
                 
-            s3_request:send($request);
-        }
+            (: TODO request:send($request) :)
+     }
 };

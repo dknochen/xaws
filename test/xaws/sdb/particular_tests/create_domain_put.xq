@@ -34,17 +34,15 @@ import module namespace domain = 'http://www.xquery.me/modules/xaws/sdb/domain' 
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 import module namespace util = 'http://www.xquery.me/modules/xaws/helpers/utils' at '/uk/co/xquery/www/modules/xaws/helpers/utils.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
 
-declare namespace aws = "http://sdb.amazonaws.com/doc/2009-04-15/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
     
-    declare $domain := "MyStore";
-    declare $aws-key := "...";
-    declare $aws-secret := "...";
+    variable $domain := "MyStore";
+    variable $aws-key := "...";
+    variable $aws-secret := "...";
     
     (: create domain MyStore :)
     domain:create(
@@ -61,6 +59,6 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                 <name>color</name>         
                 <value>black</value>   
             </attribute>
-        </attributes>);
+        </attributes>)
         
 };

@@ -31,19 +31,17 @@ module namespace test = 'http://test/xaws/sns/particular_tests/list_subscription
 import module namespace topic = 'http://www.xquery.me/modules/xaws/sns/topic' at '/uk/co/xquery/www/modules/xaws/sns/topic.xq';
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sns.amazonaws.com/doc/2010-03-31/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sns_list_subscriptions_by_topic";
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
-    declare $topic-arn := string($testconfig/topic-arn/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sns_list_subscriptions_by_topic";
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $topic-arn := string($testconfig/topic-arn/text());
     
     try {
         (: list all subscriptions :)
@@ -51,12 +49,12 @@ declare sequential function test:run($testconfig as element(config),$testresult 
         
         return 
             (: save the list in the testresult-message :)
-            set $msg := $result//aws:member;
-            set $success := true();
+            $msg := $result//aws:member;
+            $success := true();
             
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
     
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
@@ -64,5 +62,5 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                     </particular_test>
     ) as last into $testresult;
     
-    $testresult;
+    $testresult
 };

@@ -30,14 +30,16 @@ import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
 
 declare namespace aws = "http://s3.amazonaws.com/doc/2006-03-01/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "bucket_create_delete";
-    declare $bucket-name := "test.XQuery.me.bucket";
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "bucket_create_delete";
+    variable $bucket-name := "test.XQuery.me.bucket";
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
     
     try {
     
@@ -65,7 +67,7 @@ declare sequential function test:run($testconfig as element(config),$testresult 
         return 
             if($exists)
             then
-                block{
+                {
                     bucket:delete($aws-key,$aws-secret,$bucket-name);     
         
                     let $result := bucket:list($aws-key,$aws-secret)
@@ -73,16 +75,16 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                     return 
                         if(not($exists))
                         then
-                            set $success := true()
+                            $success := true();
                         else 
-                            set $msg := ("Bucket was not deleted: ",$result);
+                            $msg := ("Bucket was not deleted: ",$result);
                 }
             else();
 
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
     
     insert node <test name="{$testname}" success="{$success}">{$msg}</test> as last into $testresult;
-    $testresult;
+    $testresult
 };

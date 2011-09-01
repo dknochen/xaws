@@ -31,14 +31,15 @@
 module namespace topic = 'http://www.xquery.me/modules/xaws/sns/topic';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 
-import module namespace sns_request = 'http://www.xquery.me/modules/xaws/sns/request' at '../sns/request.xq';
-import module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request' at '../helpers/request.xq';
-import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils' at '../helpers/utils.xq';
-import module namespace error = 'http://www.xquery.me/modules/xaws/sns/error' at '../sns/error.xq';
+import module namespace sns_request = 'http://www.xquery.me/modules/xaws/sns/request';
+import module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request';
+import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
+import module namespace error = 'http://www.xquery.me/modules/xaws/sns/error';
 
 declare namespace aws = "http://sns.amazonaws.com/doc/2010-03-31/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 
 declare variable $topic:host as xs:string := "sns.us-east-1.amazonaws.com";
 declare variable $topic:path as xs:string := "/";
@@ -54,16 +55,16 @@ declare variable $topic:arn as xs:string := "";
  : @param $topic-name The topic name
  : @return returns the unique topic-ARN found by the topic name
 :)
-declare sequential function topic:get-topicARN-by-topicName(
+declare %ann:sequential function topic:get-topicARN-by-topicName(
     $topic-name as xs:string,
     $aws-access-key as xs:string, 
     $aws-secret as xs:string
 ) as item()* {
 
-    declare $topic-list := topic:list($aws-access-key,$aws-secret);
-    declare $topic-arn := $topic-list//aws:Topics/aws:member/aws:TopicArn[ends-with(text(), concat(":", $topic-name))]; 
+    variable $topic-list := topic:list($aws-access-key,$aws-secret);
+    variable $topic-arn := $topic-list//aws:Topics/aws:member/aws:TopicArn[ends-with(text(), concat(":", $topic-name))]; 
 
-    $topic-arn;
+    $topic-arn
 };
 
 (:~
@@ -75,12 +76,12 @@ declare sequential function topic:get-topicARN-by-topicName(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListTopicResponse element 
 :)
-declare sequential function topic:list(
+declare %ann:sequential function topic:list(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string
 ) as item()* {
 
-    topic:list($aws-access-key,$aws-secret,());
+    topic:list($aws-access-key,$aws-secret,())
     
 };
 
@@ -94,7 +95,7 @@ declare sequential function topic:list(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListTopicResponse element 
 :)
-declare sequential function topic:list(
+declare %ann:sequential function topic:list(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $next-token as xs:string?
@@ -110,7 +111,7 @@ declare sequential function topic:list(
         )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -120,7 +121,7 @@ declare sequential function topic:list(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send(fn:trace($request, "blub"))
         }
 };
 
@@ -134,7 +135,7 @@ declare sequential function topic:list(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:CreateTopicResponse element 
 :)
-declare sequential function topic:create(
+declare %ann:sequential function topic:create(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $name as xs:string
@@ -146,7 +147,7 @@ declare sequential function topic:create(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -156,7 +157,7 @@ declare sequential function topic:create(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -170,7 +171,7 @@ declare sequential function topic:create(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:DeleteTopicResponse element
 :)
-declare sequential function topic:delete(
+declare %ann:sequential function topic:delete(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string
@@ -182,7 +183,7 @@ declare sequential function topic:delete(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -192,7 +193,7 @@ declare sequential function topic:delete(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -205,7 +206,7 @@ declare sequential function topic:delete(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListSubscriptionsResponse element
 :)
-declare sequential function topic:list-subscriptions(
+declare %ann:sequential function topic:list-subscriptions(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string
 ) as item()* {
@@ -223,7 +224,7 @@ declare sequential function topic:list-subscriptions(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListSubscriptionsResponse element
 :)
-declare sequential function topic:list-subscriptions(
+declare %ann:sequential function topic:list-subscriptions(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $next-token as xs:string?
@@ -239,7 +240,7 @@ declare sequential function topic:list-subscriptions(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -249,7 +250,7 @@ declare sequential function topic:list-subscriptions(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
         
 };
@@ -264,7 +265,7 @@ declare sequential function topic:list-subscriptions(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListSubscriptionsByTopicResponse element
 :)
-declare sequential function topic:list-subscriptions-by-topic(
+declare %ann:sequential function topic:list-subscriptions-by-topic(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string
@@ -284,7 +285,7 @@ declare sequential function topic:list-subscriptions-by-topic(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListSubscriptionsByTopicResponse element
 :)
-declare sequential function topic:list-subscriptions-by-topic(
+declare %ann:sequential function topic:list-subscriptions-by-topic(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -302,7 +303,7 @@ declare sequential function topic:list-subscriptions-by-topic(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -312,7 +313,7 @@ declare sequential function topic:list-subscriptions-by-topic(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -332,7 +333,7 @@ declare sequential function topic:list-subscriptions-by-topic(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:GetTopicAttributesResponse element
 :)
-declare sequential function topic:get-topic-attributes(
+declare %ann:sequential function topic:get-topic-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string
@@ -344,7 +345,7 @@ declare sequential function topic:get-topic-attributes(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -354,7 +355,7 @@ declare sequential function topic:get-topic-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -371,7 +372,7 @@ declare sequential function topic:get-topic-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:SetTopicAttributesResponse element
 :)
-declare sequential function topic:set-topic-attributes(
+declare %ann:sequential function topic:set-topic-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -387,7 +388,7 @@ declare sequential function topic:set-topic-attributes(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -397,7 +398,7 @@ declare sequential function topic:set-topic-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -426,7 +427,7 @@ declare sequential function topic:set-topic-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:SubscribeResponse element
 :)
-declare sequential function topic:subscribe(
+declare %ann:sequential function topic:subscribe(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -442,7 +443,7 @@ declare sequential function topic:subscribe(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -452,7 +453,7 @@ declare sequential function topic:subscribe(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -474,7 +475,7 @@ declare sequential function topic:subscribe(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:UnsubscribeResponse element
 :)
-declare sequential function topic:unsubscribe(
+declare %ann:sequential function topic:unsubscribe(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $subscription-arn as xs:string
@@ -486,7 +487,7 @@ declare sequential function topic:unsubscribe(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -496,7 +497,7 @@ declare sequential function topic:unsubscribe(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -510,7 +511,7 @@ declare sequential function topic:unsubscribe(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ConfirmSubscriptionResponse element
 :)
-declare sequential function topic:confirm-subscription(
+declare %ann:sequential function topic:confirm-subscription(
     $topic-arn as xs:string,
     $token as xs:string
 ) as item()* {
@@ -531,7 +532,7 @@ declare sequential function topic:confirm-subscription(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ConfirmSubscriptionResponse element
 :)
-declare sequential function topic:confirm-subscription(
+declare %ann:sequential function topic:confirm-subscription(
     $aws-access-key as xs:string?, 
     $aws-secret as xs:string?,
     $topic-arn as xs:string,
@@ -553,7 +554,7 @@ declare sequential function topic:confirm-subscription(
     return 
     if ($authenticate-on-unsubscribe)
     then
-        block{
+        {
         (: sign the request :)
         request:sign-v2(
             $request,
@@ -563,10 +564,10 @@ declare sequential function topic:confirm-subscription(
             $aws-access-key,
             $aws-secret);
             
-        sns_request:send($request);
+        sns_request:send($request)
     } 
     else
-        sns_request:send($request); 
+        sns_request:send($request) 
 };
 
 (:~
@@ -580,7 +581,7 @@ declare sequential function topic:confirm-subscription(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:PublishResponse element
 :)
-declare sequential function topic:publish(
+declare %ann:sequential function topic:publish(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -602,7 +603,7 @@ declare sequential function topic:publish(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:PublishResponse element
 :)
-declare sequential function topic:publish(
+declare %ann:sequential function topic:publish(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -622,7 +623,7 @@ declare sequential function topic:publish(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -632,7 +633,7 @@ declare sequential function topic:publish(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -661,7 +662,7 @@ declare sequential function topic:publish(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:AddPermissionResponse element 
 :)
-declare sequential function topic:add-permission(
+declare %ann:sequential function topic:add-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -679,7 +680,7 @@ declare sequential function topic:add-permission(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -689,7 +690,7 @@ declare sequential function topic:add-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };
 
@@ -704,7 +705,7 @@ declare sequential function topic:add-permission(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:RemovePermissionResponse  element 
 :)
-declare sequential function topic:remove-permission(
+declare %ann:sequential function topic:remove-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $topic-arn as xs:string,
@@ -718,7 +719,7 @@ declare sequential function topic:remove-permission(
     )
     let $request := request:create("GET",$topic:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -728,6 +729,6 @@ declare sequential function topic:remove-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            sns_request:send($request);
+            sns_request:send($request)
         }
 };

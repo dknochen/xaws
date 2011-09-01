@@ -161,17 +161,17 @@ list_subscriptions_by_topic:run($testconfig,$testresult);
 
 if (data($testresult/particular_test/@success)[1] eq "true")
 then
-    block {
+     {
         (: Confirm the subscription :)
         confirm_subscription:run($testconfig,$testresult);
         
         (: save the subscription-ARN in the testconfig :)
-        set $subscription-arn := ($testresult/particular_test/subscriptionARN/text())[1];
+        $subscription-arn := ($testresult/particular_test/subscriptionARN/text())[1];
         insert node <subscription-arn>{$subscription-arn}</subscription-arn> as last into $testconfig;
                 
         if (data($testresult/particular_test/@success)[2] eq "true")
         then
-            block {
+             {
                 (: list all existing subscriptions by the specified topic. 
                    For the endpoint you´ve made a subscription in part one, 
                    at "SubscriptionARN" should no longer be the status 
@@ -180,57 +180,57 @@ then
                 
                 if (data($testresult/particular_test/@success)[3] eq "true")
                 then
-                    block {
+                     {
                         (: publish a message to all of a topic's subscribed endpoints :)
                         publish:run($testconfig,$testresult);
                         
                         if (data($testresult/particular_test/@success)[4] eq "true")
                         then
-                            block {
+                             {
                                 (: unsubscribe :)
                                 unsubscribe:run($testconfig,$testresult);
                                 
                                 if (data($testresult/particular_test/@success)[5] eq "true")
                                 then
-                                    block {
+                                     {
                                         (: get all attributes :)
                                         get_topic_attributes:run($testconfig,$testresult);
                                         
                                         if (data($testresult/particular_test/@success)[6] eq "true")
                                         then
-                                            block {
+                                             {
                                                 (: add permission :)
                                                 add_permission:run($testconfig,$testresult);
                                                 
                                                 if (data($testresult/particular_test/@success)[7] eq "true")
                                                 then
-                                                    block {
+                                                     {
                                                         (: set attribute :)
                                                         set_topic_attributes:run($testconfig,$testresult);
                                                         
                                                         if (data($testresult/particular_test/@success)[8] eq "true")
                                                         then
-                                                            block {
+                                                             {
                                                                 (: get all attributes again to show the changes :)
                                                                 get_topic_attributes:run($testconfig,$testresult);
                                                                 
                                                                 if (data($testresult/particular_test/@success)[9] eq "true")
                                                                 then
-                                                                    block {
+                                                                     {
                                                                         (: remove permission :)
                                                                         remove_permission:run($testconfig,$testresult);
                                                                         
                                                                         if (data($testresult/particular_test/@success)[10] eq "true")
                                                                         then
-                                                                            block {
+                                                                             {
                                                                                 (: delete the test topic to re-establish the initial condition :)
                                                                                 delete_topic:run($testconfig,$testresult);
                                                                                 
                                                                                 if (data($testresult/particular_test/@success)[11] eq "true")
                                                                                 then
-                                                                                    block {
+                                                                                     {
                                                                                         (: set the final state of this test run :)
-                                                                                        set $success := true();
+                                                                                         $success := true();
                                                                                     }
                                                                                 else ();
                                                                             }
@@ -257,8 +257,8 @@ else ();
 
 if ($success)
 then
-    insert node <overall_result>"Success"</overall_result> as last into $testresult
+    insert node <overall_result>"Success"</overall_result> as last into $testresult;
 else
     insert node <overall_result>"Failed"</overall_result> as last into $testresult;
 
-$testresult;
+$testresult

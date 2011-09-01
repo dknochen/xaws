@@ -35,35 +35,33 @@ import module namespace domain = 'http://www.xquery.me/modules/xaws/sdb/domain' 
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 import module namespace util = 'http://www.xquery.me/modules/xaws/helpers/utils' at '/uk/co/xquery/www/modules/xaws/helpers/utils.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sdb.amazonaws.com/doc/2009-04-15/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sdb_delete_domain";
-    declare $domain-name := string($testconfig/domain-name/text());
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sdb_delete_domain";
+    variable $domain-name := string($testconfig/domain-name/text());
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
     
     try {
         (: delete the domain :)
         domain:delete($aws-key,$aws-secret,$domain-name);
         
-        set $success := true();
-        set $msg := "Domain successfully deleted.";
+        $success := true();
+        $msg := "Domain successfully deleted.";
                 
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:descriptiong,$err:value);
+    }
    
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
                         <result>{$msg}</result>
                     </particular_test>
     ) as last into $testresult;
-    $testresult;
+    $testresult
 };

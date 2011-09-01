@@ -25,7 +25,6 @@
 module namespace bucket = 'http://www.xquery.me/modules/xaws/s3/bucket';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 
 import module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request';
 import module namespace s3_request = 'http://www.xquery.me/modules/xaws/s3/request';
@@ -35,6 +34,9 @@ import module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory'
 
 declare namespace aws = "http://s3.amazonaws.com/doc/2006-03-01/";
 declare namespace s3 = "http://doc.s3.amazonaws.com/2006-03-01";
+
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 
 (:~
  : Deletes the bucket provided as parameter or the context bucket if no <code>$bucket</code> parameter is given. 
@@ -48,7 +50,7 @@ declare namespace s3 = "http://doc.s3.amazonaws.com/2006-03-01";
  : @param $bucket the name of the bucket to be deleted  
  : @return returns the http response information (header,statuscode,...) 
 :)
-declare sequential function bucket:delete(
+declare %ann:sequential function bucket:delete(
     $aws-config as element(aws-config), 
     $bucket as xs:string?
 ) as item()* {
@@ -95,7 +97,7 @@ declare sequential function bucket:delete(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListAllMyBucketsResult element 
 :)
-declare sequential function bucket:list(
+declare %ann:sequential function bucket:list(
     $aws-config as element(aws-config)
 ) as item()* {
 
@@ -159,7 +161,7 @@ declare sequential function bucket:list(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: a node of a ListBucketResult
 :)
-declare sequential function bucket:list(
+declare %ann:sequential function bucket:list(
     $aws-config as element(aws-config),
     $list-config as element(list-config)?,
     $bucket as xs:string?
@@ -221,7 +223,7 @@ declare sequential function bucket:list(
  :                <code>context-bucket</code> is taken from the <code>$aws-config</code>.
  : @return returns the http reponse data (headers, statuscode,...)
 :)
-declare sequential function bucket:create(
+declare %ann:sequential function bucket:create(
     $aws-config as element(aws-config), 
     $create-config as element(create-config)?,
     $bucket as xs:string?
@@ -231,24 +233,24 @@ declare sequential function bucket:create(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href)
     return 
-        block{ 
+      {
             (: add location config body and acl header if any :)
             if($create-config)
             then
             (
                 if($create-config/location/text()) then
                     let $config := factory:config-create-bucket-location($create-config/location/text()) 
-                    let $content := ser:serialize($config)
-                    return request:add-content-text($request,$content) 
+                    let $content := fn:serialize($config)
+                    return 1 (: TODO :) (: request:add-content-text($request,$content)  :)
                 else (),
                 if($create-config/acl/text()) then 
                     insert node <http:header name="x-amz-acl" value="{$create-config/acl/text()}" /> as first into $request
                 else ()
-            )
+            );
             else ();
    
-            s3_request:send($aws-config,$request,$bucket,(:empty object key:)"");
-        }
+            s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
+     }
 };
 
 (:~
@@ -291,7 +293,7 @@ declare sequential function bucket:create(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: an AccessControlPolicy element
 :)
-declare sequential function bucket:get-config-acl(
+declare %ann:sequential function bucket:get-config-acl(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -349,7 +351,7 @@ declare sequential function bucket:get-config-acl(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: a JSON string containing the policy data
 :)
-declare sequential function bucket:get-config-policy(
+declare %ann:sequential function bucket:get-config-policy(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -389,7 +391,7 @@ declare sequential function bucket:get-config-policy(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: an aws:LocationConstraint element
 :)
-declare sequential function bucket:get-config-location(
+declare %ann:sequential function bucket:get-config-location(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -440,7 +442,7 @@ declare sequential function bucket:get-config-location(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: an s3:BucketLoggingStatus element
 :)
-declare sequential function bucket:get-config-logging(
+declare %ann:sequential function bucket:get-config-logging(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -484,7 +486,7 @@ declare sequential function bucket:get-config-logging(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: an NotificationConfiguration element
 :)
-declare sequential function bucket:get-config-notification(
+declare %ann:sequential function bucket:get-config-notification(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -525,7 +527,7 @@ declare sequential function bucket:get-config-notification(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: an s3:RequestPaymentConfiguration element
 :)
-declare sequential function bucket:get-config-request-payment(
+declare %ann:sequential function bucket:get-config-request-payment(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -567,7 +569,7 @@ declare sequential function bucket:get-config-request-payment(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the main result of this request: an s3:VersioningConfiguration element
 :)
-declare sequential function bucket:get-config-versioning(
+declare %ann:sequential function bucket:get-config-versioning(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {    
@@ -629,7 +631,7 @@ declare sequential function bucket:get-config-versioning(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the AccessControlPolicy element that has been set for the bucket (contains all granted access rights)
 :)
-declare sequential function bucket:grant-permission(
+declare %ann:sequential function bucket:grant-permission(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $grantee as xs:string,
@@ -640,9 +642,9 @@ declare sequential function bucket:grant-permission(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="acl" />)
     return 
-        block{
+      {
             (: get the current acl of the bucket :)
-            declare $access-control-policy := bucket:get-config-acl($aws-config,$bucket)[2];
+            variable $access-control-policy := bucket:get-config-acl($aws-config,$bucket)[2];
             
             (: modify policy: add or update grant :)
             let $current-grant := 
@@ -651,7 +653,7 @@ declare sequential function bucket:grant-permission(
             return
                 if($current-grant)
                 then
-                    replace value of node $current-grant/Permission with $permission
+                    replace value of node $current-grant/Permission with $permission;
                 else insert node 
                         factory:config-grant($grantee,$permission)
                      as last into $access-control-policy/AccessControlPolicy/AccessControlList; 
@@ -661,8 +663,8 @@ declare sequential function bucket:grant-permission(
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$access-control-policy);
-        }
+                ($response,$access-control-policy)
+     }
 };
 
 (:~
@@ -712,7 +714,7 @@ declare sequential function bucket:grant-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the AccessControlPolicy element that has been set for the bucket (contains all granted access rights)
 :)
-declare sequential function bucket:remove-permission(
+declare %ann:sequential function bucket:remove-permission(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $grantee as xs:string
@@ -722,9 +724,9 @@ declare sequential function bucket:remove-permission(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="acl" />)
     return 
-        block{
+      {
             (: get the current acl of the bucket :)
-            declare $access-control-policy := bucket:get-config-acl($aws-config,$bucket)[2];
+            variable $access-control-policy := bucket:get-config-acl($aws-config,$bucket)[2];
             
             (: modify policy: remove grant :)
             let $current-grant := 
@@ -733,7 +735,7 @@ declare sequential function bucket:remove-permission(
             return
                 if($current-grant)
                 then
-                    delete node $current-grant
+                    delete node $current-grant;
                 else (); 
                 
             (: add updated acl config body to the request :)
@@ -741,8 +743,8 @@ declare sequential function bucket:remove-permission(
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$access-control-policy);
-        }
+                ($response,$access-control-policy)
+      }
 };
 
 
@@ -771,7 +773,7 @@ declare sequential function bucket:remove-permission(
  : @param $policy the serialized JSON code representing the policy 
  : @return returns the http reponse data (headers, statuscode,...)
 :)
-declare sequential function bucket:set-policy(
+declare %ann:sequential function bucket:set-policy(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $policy as xs:string
@@ -781,12 +783,13 @@ declare sequential function bucket:set-policy(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="policy" />)
     return 
-        block{
+      {
             (: add policy config body :)
-            request:add-content-text($request,$policy);
+            (: TODO :)
+            (: request:add-content-text($request,$policy); :)
             
-            s3_request:send($aws-config,$request,$bucket,(:empty object key:)"");
-        }
+            s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
+      }
 };
 
 
@@ -833,7 +836,7 @@ declare sequential function bucket:set-policy(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the s3:BucketLoggingStatus element that has been set for the bucket logs
 :)
-declare sequential function bucket:enable-logging(
+declare %ann:sequential function bucket:enable-logging(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $logging-bucket as xs:string?,
@@ -845,16 +848,18 @@ declare sequential function bucket:enable-logging(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="logging" />)
     return 
-        block{
-            declare $logging-config := factory:config-enable-bucket-logging($logging-bucket, $logging-prefix);
+      {
+            variable $logging-config := factory:config-enable-bucket-logging($logging-bucket, $logging-prefix);
             
             (: add logging config body :)
+            (: TODO
             request:add-content-xml($request,$logging-config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$logging-config);
-        }
+                ($response,$logging-config)
+      }
 };
 
 
@@ -881,7 +886,7 @@ declare sequential function bucket:enable-logging(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the s3:BucketLoggingStatus element that has been set for the bucket
 :)
-declare sequential function bucket:disable-logging(
+declare %ann:sequential function bucket:disable-logging(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {
@@ -890,16 +895,17 @@ declare sequential function bucket:disable-logging(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="logging" />)
     return 
-        block{
-            declare $logging-config := factory:config-disable-bucket-logging();
+      {
+            variable $logging-config := factory:config-disable-bucket-logging();
             
             (: add empty logging config body :)
-            request:add-content-xml($request,$logging-config);
+            (: TODO :)
+            (: request:add-content-xml($request,$logging-config); :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$logging-config);
-        }
+                ($response,$logging-config)
+      }
 };
 
 
@@ -947,7 +953,7 @@ declare sequential function bucket:disable-logging(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the s3:BucketLoggingStatus element that has been set for the bucket logs (contains all granted access rights)
 :)
-declare sequential function bucket:grant-logging-permission(
+declare %ann:sequential function bucket:grant-logging-permission(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $grantee as xs:string,
@@ -958,9 +964,9 @@ declare sequential function bucket:grant-logging-permission(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="logging" />)
     return 
-        block{
+      {
             (: get the current logging config containing all granted permissions of the bucket :)
-            declare $logging-config := bucket:get-config-logging($aws-config,$bucket)[2];
+            variable $logging-config := bucket:get-config-logging($aws-config,$bucket)[2];
             
             (: modify logging config: add or update grant :)
             let $current-grant := 
@@ -969,18 +975,20 @@ declare sequential function bucket:grant-logging-permission(
             return
                 if($current-grant)
                 then
-                    replace value of node $current-grant/s3:Permission with $permission
+                    replace value of node $current-grant/s3:Permission with $permission;
                 else insert node 
                         factory:config-grant($grantee,$permission) 
                      as last into $logging-config/s3:BucketLoggingStatus/s3:LoggingEnabled/s3:TargetGrants; 
                 
             (: add logging config body :)
+            (: TODO
             request:add-content-xml($request,$logging-config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$logging-config);
-        }
+                ($response,$logging-config)
+      }
 };
 
 
@@ -1025,7 +1033,7 @@ declare sequential function bucket:grant-logging-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the s3:BucketLoggingStatus element that has been set for bucket (contains all granted access rights for the logs)
 :)
-declare sequential function bucket:remove-logging-permission(
+declare %ann:sequential function bucket:remove-logging-permission(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $grantee as xs:string
@@ -1035,9 +1043,9 @@ declare sequential function bucket:remove-logging-permission(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="logging" />)
     return 
-        block{
+      {
             (: get the current logging config containing all granted permissions of the bucket :)
-            declare $logging-config := bucket:get-config-logging($aws-config,$bucket)[2];
+            variable $logging-config := bucket:get-config-logging($aws-config,$bucket)[2];
             
             (: if the grantee has been granted an access right remove it :)
             let $current-grant := 
@@ -1046,16 +1054,18 @@ declare sequential function bucket:remove-logging-permission(
             return
                 if($current-grant)
                 then
-                    delete nodes $current-grant
+                    delete nodes $current-grant;
                 else (); 
                 
             (: add logging config body :)
+            (: TODO
             request:add-content-xml($request,$logging-config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$logging-config);
-        }
+                ($response,$logging-config)
+     }
 };
 
 (:~
@@ -1094,7 +1104,7 @@ declare sequential function bucket:remove-logging-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the NotificationConfiguration element that has been set for a lost object event
 :)
-declare sequential function bucket:enable-lost-object-notification(
+declare %ann:sequential function bucket:enable-lost-object-notification(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $topic as xs:string
@@ -1104,16 +1114,18 @@ declare sequential function bucket:enable-lost-object-notification(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="notification" />)
     return 
-        block{
-            declare $config := factory:config-enable-lost-object-notification($topic);
+      {
+            variable $config := factory:config-enable-lost-object-notification($topic);
             
             (: add notification config body to request :)
+            (: TODO
             request:add-content-xml($request,$config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$config);
-        }
+                ($response,$config)
+      }
 };
 
 
@@ -1139,7 +1151,7 @@ declare sequential function bucket:enable-lost-object-notification(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the NotificationConfiguration element that has been set for a lost object event. In this case an empty element.
 :)
-declare sequential function bucket:disable-lost-object-notification(
+declare %ann:sequential function bucket:disable-lost-object-notification(
     $aws-config as element(aws-config),
     $bucket as xs:string?
 ) as item()* {
@@ -1148,16 +1160,18 @@ declare sequential function bucket:disable-lost-object-notification(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="notification" />)
     return 
-        block{
-            declare $config := factory:config-disable-lost-object-notification();
+      {
+            variable $config := factory:config-disable-lost-object-notification();
     
             (: add notification config body to request :)
+            (: TODO
             request:add-content-xml($request,$config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$config);
-        }
+                ($response,$config)
+      }
 };
 
 
@@ -1189,7 +1203,7 @@ declare sequential function bucket:disable-lost-object-notification(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the RequestPaymentConfiguration element that has been set for the bucket
 :)
-declare sequential function bucket:set-request-payment-configuration(
+declare %ann:sequential function bucket:set-request-payment-configuration(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $payer as xs:string
@@ -1199,16 +1213,18 @@ declare sequential function bucket:set-request-payment-configuration(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="requestPayment" />)
     return 
-        block{
-            declare $config := factory:config-request-payment($payer);
+      {
+            variable $config := factory:config-request-payment($payer);
     
             (: add request payment config body to request :)
+            (: TODO
             request:add-content-xml($request,$config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$config);
-        }
+                ($response,$config)
+      }
 };
 
 (:~
@@ -1242,7 +1258,7 @@ declare sequential function bucket:set-request-payment-configuration(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the VersioningConfiguration element that has been set for the bucket
 :)
-declare sequential function bucket:enable-versioning(
+declare %ann:sequential function bucket:enable-versioning(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $mfa-delete as xs:boolean?
@@ -1252,16 +1268,18 @@ declare sequential function bucket:enable-versioning(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="versioning" />)
     return 
-        block{
-            declare $config := factory:config-enable-versioning($mfa-delete);
+      {
+            variable $config := factory:config-enable-versioning($mfa-delete);
     
             (: add versioning config body to request :)
+            (: TODO
             request:add-content-xml($request,$config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$config);
-        }
+                ($response,$config)
+      }
 };
 
 (:~
@@ -1297,7 +1315,7 @@ declare sequential function bucket:enable-versioning(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the VersioningConfiguration element that has been set for the bucket
 :)
-declare sequential function bucket:disable-versioning(
+declare %ann:sequential function bucket:disable-versioning(
     $aws-config as element(aws-config),
     $bucket as xs:string?,
     $mfa-delete as xs:boolean?
@@ -1307,14 +1325,16 @@ declare sequential function bucket:disable-versioning(
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
     let $request := request:create("PUT",$href,<parameter name="versioning" />)
     return 
-        block{
-            declare $config := factory:config-disable-versioning($mfa-delete);
+      {
+            variable $config := factory:config-disable-versioning($mfa-delete);
             
             (: add versioning config body to request :)
+            (: TODO
             request:add-content-xml($request,$config);
+            :)
             
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$config);
-        }
+                ($response,$config)
+      }
 };

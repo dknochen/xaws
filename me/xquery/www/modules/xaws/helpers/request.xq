@@ -25,10 +25,9 @@ module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request';
 import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-import module namespace base64 = "http://www.zorba-xquery.com/modules/base64";
-import module namespace hmac = "http://www.zorba-xquery.com/modules/security/hmac";
+import module namespace hash = "http://www.zorba-xquery.com/modules/cryptography/hash";
+import module namespace base64 = "http://www.zorba-xquery.com/modules/converters/base64";
+import module namespace hmac = "http://www.zorba-xquery.com/modules/cryptography/hmac";
 
 (:~
  : create an http request
@@ -61,7 +60,7 @@ declare function request:create(
     $method as xs:string,
     $href as xs:string,
     $parameters as element(parameter)*) as element(http:request) {
-    request:create($method,$href,$parameters,(), (),())
+    request:create($method,$href,$parameters,(), (),(),())
 };
 
 (:~
@@ -174,7 +173,7 @@ declare updating function request:sign-v2(
             if ($version)
             then
                 <parameter name="Version" value="{$version}" />
-            else ();
+            else ()
         )
     let $canonical as xs:string :=
         (: trace( :)

@@ -75,8 +75,7 @@ import module namespace list_subscriptions = 'http://test/xaws/sns/particular_te
 import module namespace subscribe = 'http://test/xaws/sns/particular_tests/subscribe' at "particular_tests/subscribe.xq";
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
+import module namespace hash = "http://www.zorba-xquery.com/modules/cryptography/hash";
 
 (:
 ********** CONFIGURATION AREA **********
@@ -122,16 +121,16 @@ list_topics:run($testconfig,$testresult);
 
 if (data($testresult/particular_test/@success)[1] eq "true")
 then
-    block {
+    {
     
         (: create a topic :)
         create_topic:run($testconfig,$testresult);
         
         if (data($testresult/particular_test/@success)[2] eq "true")
         then
-            block {
+            {
                 (: save the topic-ARN in the testconfig :)
-                set $topic-arn := ($testresult/particular_test/topicARN/text())[1];
+                $topic-arn := ($testresult/particular_test/topicARN/text())[1];
                 insert node <topic-arn>{$topic-arn}</topic-arn> as last into $testconfig;
                 
                 (: list all topics again --> the created topic is in this list :)
@@ -139,23 +138,23 @@ then
                 
                 if (data($testresult/particular_test/@success)[3] eq "true")
                 then
-                    block {
+                    {
                     
                         (: List the requester´s subscriptions :)
                         list_subscriptions:run($testconfig,$testresult);
                         
                         if (data($testresult/particular_test/@success)[4] eq "true")
                         then
-                            block {
+                            {
                                 
                                 (: Subscribe the topic :)
                                 subscribe:run($testconfig,$testresult);
                                 
                                 if (data($testresult/particular_test/@success)[5] eq "true")
                                 then
-                                    block {
+                                    {
                                         (: set the final state of this test run :)
-                                        set $success := true();
+                                        $success := true();
                                     }
                                 else ();
                             }
@@ -170,7 +169,7 @@ else ();
 
 if ($success)
 then
-    insert node <overall_result>"Success"</overall_result> as last into $testresult
+    insert node <overall_result>"Success"</overall_result> as last into $testresult;
 else
     insert node <overall_result>"Failed"</overall_result> as last into $testresult;
 
@@ -179,8 +178,8 @@ then
     insert nodes <copy_into_testsuite_part2>
                     <topic-arn>{$topic-arn}</topic-arn>
                 </copy_into_testsuite_part2>
-    as last into $testresult
+    as last into $testresult;
 else ();
 
 
-$testresult;
+$testresult

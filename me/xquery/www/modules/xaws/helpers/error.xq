@@ -23,8 +23,7 @@
 module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace base64 = "http://www.zorba-xquery.com/modules/base64";
+import module namespace base64 = "http://www.zorba-xquery.com/modules/converters/base64";
 
 (: locales :)
 declare variable $error:LOCALE_EN as xs:string := "en_EN";
@@ -98,7 +97,7 @@ declare function error:throw(
         then node-name($message_node)
         else xs:QName("error:UNEXPECTED_ERROR")
     
-    let $eo := ser:serialize($error_obj)
+    let $eo := fn:serialize($error_obj)
     return 
         error($error_qname,$description,trace($error_obj,"ERROROBJ: "))
 };
@@ -132,7 +131,7 @@ declare function error:to-string($code,$message,$obj) as xs:string {
             concat("Errorcode: " , $code),
             concat("Errormessage: ", $message),
             if($obj)
-            then concat( "Errorobject: ", ser:serialize($obj))
+            then concat( "Errorobject: ", fn:serialize($obj))
             else "Errorobject: ()"
         )
     return string-join($msgs,"&#10;")

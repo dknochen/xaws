@@ -30,13 +30,15 @@ import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
 
 declare namespace aws = "http://s3.amazonaws.com/doc/2006-03-01/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "buckets_list";
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "buckets_list";
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
     
     try {
         (: list all buckets of the user :)
@@ -44,14 +46,14 @@ declare sequential function test:run($testconfig as element(config),$testresult 
         return
             if($result/aws:ListAllMyBucketsResult)
             then
-                set $success := true()
+                $success := true();
             else 
-                set $msg := ("Response is no ListAllMyBucketsResult: ",$result);
+                $msg := ("Response is no ListAllMyBucketsResult: ",$result);
 
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
     
     insert node <test name="{$testname}" success="{$success}">{$msg}</test> as last into $testresult;
-    $testresult;
+    $testresult
 };

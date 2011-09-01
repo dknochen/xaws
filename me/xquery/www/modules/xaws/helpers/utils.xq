@@ -25,6 +25,8 @@ module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
 import module namespace http = "http://expath.org/ns/http-client";
 import module namespace date = "http://www.zorba-xquery.com/modules/datetime";
 
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 (:~
  : Generate a date formated according to rfc822. Example: Fri, 15 Oct 10
  :
@@ -57,14 +59,14 @@ declare function utils:timestamp() as xs:string {
         )
 };
 
-declare sequential function utils:sleep($sec as xs:integer) {
+declare %ann:sequential function utils:sleep($sec as xs:integer) {
 
-    declare $duration as xs:dayTimeDuration := xs:dayTimeDuration(concat('PT',string($sec),'S'));
-    declare $start-time := date:current-dateTime();
-    declare $run-time as xs:dayTimeDuration := xs:dayTimeDuration('PT0S');
+    variable $duration as xs:dayTimeDuration := xs:dayTimeDuration(concat('PT',string($sec),'S'));
+    variable $start-time := date:current-dateTime();
+    variable $run-time as xs:dayTimeDuration := xs:dayTimeDuration('PT0S');
     
     while ($run-time < $duration) {
-        set $run-time := 
+        $run-time :=
             let $time := date:current-dateTime()
             return
                 $time - $start-time;  

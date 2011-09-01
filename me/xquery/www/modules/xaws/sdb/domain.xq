@@ -29,14 +29,14 @@
 module namespace domain = 'http://www.xquery.me/modules/xaws/sdb/domain';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
 
-import module namespace sdb_request = 'http://www.xquery.me/modules/xaws/sdb/request' at '../sdb/request.xq';
-import module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request' at '../helpers/request.xq';
-import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils' at '../helpers/utils.xq';
-import module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error' at '../sdb/error.xq';
+import module namespace sdb_request = 'http://www.xquery.me/modules/xaws/sdb/request';
+import module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request';
+import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
+import module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error';
 
 declare namespace aws = "http://sdb.amazonaws.com/doc/2009-04-15/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
 
 declare variable $domain:host as xs:string := "sdb.amazonaws.com";
 declare variable $domain:path as xs:string := "/";
@@ -56,7 +56,7 @@ declare variable $domain:version as xs:string := "2009-04-15";
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListDomainsResponse element 
 :)
-declare sequential function domain:list(
+declare %ann:sequential function domain:list(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string
 ) as item()* {
@@ -79,7 +79,7 @@ declare sequential function domain:list(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListDomainsResponse element 
 :)
-declare sequential function domain:list(
+declare %ann:sequential function domain:list(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $next-token as xs:string
@@ -104,7 +104,7 @@ declare sequential function domain:list(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:ListDomainsResponse element 
 :)
-declare sequential function domain:list(
+declare %ann:sequential function domain:list(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $max-number-of-domains as xs:string?,
@@ -126,7 +126,7 @@ declare sequential function domain:list(
         )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -137,7 +137,7 @@ declare sequential function domain:list(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -171,7 +171,7 @@ declare sequential function domain:list(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:CreateDomainResponse element 
 :)
-declare sequential function domain:create(
+declare %ann:sequential function domain:create(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string
@@ -183,7 +183,7 @@ declare sequential function domain:create(
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -194,7 +194,7 @@ declare sequential function domain:create(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -218,7 +218,7 @@ declare sequential function domain:create(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:DeleteDomainResponse element
 :)
-declare sequential function domain:delete(
+declare %ann:sequential function domain:delete(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string
@@ -230,7 +230,7 @@ declare sequential function domain:delete(
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -241,7 +241,7 @@ declare sequential function domain:delete(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -257,7 +257,7 @@ declare sequential function domain:delete(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:DomainMetadataResponse element
 :)
-declare sequential function domain:metadata(
+declare %ann:sequential function domain:metadata(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string
@@ -269,7 +269,7 @@ declare sequential function domain:metadata(
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -280,7 +280,7 @@ declare sequential function domain:metadata(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -380,7 +380,7 @@ declare sequential function domain:metadata(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:PutAttributesResponse element
 :)
-declare sequential function domain:put-attributes(
+declare %ann:sequential function domain:put-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -417,11 +417,11 @@ declare sequential function domain:put-attributes(
             else ()
          )
          (:let $counter := $counter + 1:)
-         return $attr-parameters;
+         return $attr-parameters
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -432,7 +432,7 @@ declare sequential function domain:put-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -466,7 +466,7 @@ declare sequential function domain:put-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:GetAttributesResponse element
 :)
-declare sequential function domain:get-attributes(
+declare %ann:sequential function domain:get-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -508,7 +508,7 @@ declare sequential function domain:get-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:GetAttributesResponse element
 :)
-declare sequential function domain:get-attributes(
+declare %ann:sequential function domain:get-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -552,7 +552,7 @@ declare sequential function domain:get-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:GetAttributesResponse element
 :)
-declare sequential function domain:get-attributes(
+declare %ann:sequential function domain:get-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -578,7 +578,7 @@ declare sequential function domain:get-attributes(
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -589,7 +589,7 @@ declare sequential function domain:get-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -666,7 +666,7 @@ declare sequential function domain:get-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:DeleteAttributesResponse element
 :)
-declare sequential function domain:delete-attributes(
+declare %ann:sequential function domain:delete-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -751,7 +751,7 @@ declare sequential function domain:delete-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:DeleteAttributesResponse element
 :)
-declare sequential function domain:delete-attributes(
+declare %ann:sequential function domain:delete-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -766,7 +766,7 @@ declare sequential function domain:delete-attributes(
         
         if ($attributes)
         then
-            block {
+            {
                 for $attribute at $counter in $attributes/attribute
                 let $attr-parameters := (
                     
@@ -793,11 +793,11 @@ declare sequential function domain:delete-attributes(
                  )
                  return $attr-parameters;
              }
-         else ()
+         else {}
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -808,7 +808,7 @@ declare sequential function domain:delete-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -860,7 +860,7 @@ declare sequential function domain:delete-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:SelectResponse element
 :)
-declare sequential function domain:select(
+declare %ann:sequential function domain:select(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $select-expression as xs:string
@@ -919,7 +919,7 @@ declare sequential function domain:select(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:SelectResponse element
 :)
-declare sequential function domain:select(
+declare %ann:sequential function domain:select(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $select-expression as xs:string,
@@ -980,7 +980,7 @@ declare sequential function domain:select(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:SelectResponse element
 :)
-declare sequential function domain:select(
+declare %ann:sequential function domain:select(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $select-expression as xs:string,
@@ -1004,7 +1004,7 @@ declare sequential function domain:select(
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -1015,7 +1015,7 @@ declare sequential function domain:select(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -1112,7 +1112,7 @@ declare sequential function domain:select(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:BatchPutAttributesResponse element
 :)
-declare sequential function domain:batch-put-attributes(
+declare %ann:sequential function domain:batch-put-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -1137,13 +1137,13 @@ declare sequential function domain:batch-put-attributes(
                     <parameter name="{concat("Item.",$item-counter,".Attribute.",$attr-counter,".Replace")}" value="{$attribute/replace/text()}" />
                 else ()
             )
-            return $attribute-parameters; 
+            return $attribute-parameters
          )
-         return $item-parameters;
+         return $item-parameters
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -1154,7 +1154,7 @@ declare sequential function domain:batch-put-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };
 
@@ -1227,7 +1227,7 @@ declare sequential function domain:batch-put-attributes(
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the aws:BatchDeleteAttributesResponse element
 :)
-declare sequential function domain:batch-delete-attributes(
+declare %ann:sequential function domain:batch-delete-attributes(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $domain-name as xs:string,
@@ -1248,13 +1248,13 @@ declare sequential function domain:batch-delete-attributes(
                 <parameter name="{concat("Item.",$item-counter,".Attribute.",$attr-counter,".Name")}" value="{$attribute/name/text()}" />,
                 <parameter name="{concat("Item.",$item-counter,".Attribute.",$attr-counter,".Value")}" value="{$attribute/value/text()}" />
             )
-            return $attribute-parameters; 
+            return $attribute-parameters 
          )
-         return $item-parameters;
+         return $item-parameters
     )
     let $request := request:create("GET",$domain:href,$parameters)
     return 
-        block{
+        {
             (: sign the request :)
             request:sign-v2(
                 $request,
@@ -1265,6 +1265,6 @@ declare sequential function domain:batch-delete-attributes(
                 $aws-access-key,
                 $aws-secret);
                 
-            sdb_request:send($request);
+            sdb_request:send($request)
         }
 };

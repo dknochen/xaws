@@ -29,9 +29,10 @@ import module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory'
 import module namespace error = 'http://www.xquery.me/modules/xaws/s3/error';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace base64 = "http://www.zorba-xquery.com/modules/base64";
-import module namespace hmac = "http://www.zorba-xquery.com/modules/security/hmac";
+import module namespace hmac = "http://www.zorba-xquery.com/modules/cryptography/hmac";
+
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 
 
 (:~
@@ -48,7 +49,7 @@ import module namespace hmac = "http://www.zorba-xquery.com/modules/security/hma
  : @param $object-key The key of the object (if any) which is used in the context of the S3 request.
  : @return the http response
 :)
-declare sequential function request:send(
+declare %ann:sequential function request:send(
     $aws-config as element(aws-config),
     $request as element(http:request),
     $bucket-name as xs:string,
@@ -67,7 +68,7 @@ declare sequential function request:send(
     return
         if($status = (200,204)) 
         then $response
-        else error:throw($status,$response);
+        else error:throw($status,$response)
 };
 
 (:~
@@ -161,7 +162,8 @@ declare updating function request:add-replace-metadata-flag($request as element(
 declare updating function request:add-acl-grantee(
     $request as element(http:request),$acl as element(AccessControlPolicy)){
 
-    common_request:add-content-xml($request,$acl)
+ (: TODO :)
+    (: common_request:add-content-xml($request,$acl) :)
 };
 
 

@@ -30,32 +30,30 @@ module namespace test = 'http://test/xaws/sns/particular_tests/set_topic_attribu
 import module namespace topic = 'http://www.xquery.me/modules/xaws/sns/topic' at '/uk/co/xquery/www/modules/xaws/sns/topic.xq';
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sns.amazonaws.com/doc/2010-03-31/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sns_set_topic_attributes";
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
-    declare $topic-arn := string($testconfig/topic-arn/text());
-    declare $attr-name := string($testconfig/attr-name/text());
-    declare $attr-value := string($testconfig/attr-value/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sns_set_topic_attributes";
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $topic-arn := string($testconfig/topic-arn/text());
+    variable $attr-name := string($testconfig/attr-name/text());
+    variable $attr-value := string($testconfig/attr-value/text());
     
     try {
         (: set attributes :)
         topic:set-topic-attributes($aws-key, $aws-secret, $topic-arn, $attr-name, $attr-value)[2];
        
-        set $msg := "Atribute successfully changed";
-        set $success := true();
+        $msg := "Atribute successfully changed";
+        $success := true();
             
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
     
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
@@ -63,5 +61,5 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                     </particular_test>
     ) as last into $testresult;
     
-    $testresult;
+    $testresult
 };

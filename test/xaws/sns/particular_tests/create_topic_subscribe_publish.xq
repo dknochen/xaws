@@ -32,35 +32,33 @@ import module namespace topic = 'http://www.xquery.me/modules/xaws/sns/topic' at
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 import module namespace util = 'http://www.xquery.me/modules/xaws/helpers/utils' at '/uk/co/xquery/www/modules/xaws/helpers/utils.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sns.amazonaws.com/doc/2010-03-31/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sns_create_topic";
-    declare $topic-name := string($testconfig/topic-name/text());
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sns_create_topic";
+    variable $topic-name := string($testconfig/topic-name/text());
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
     
-    declare $response;
-    declare $topic-arn := "";
-    declare $topic-list;
+    variable $response;
+    variable $topic-arn := "";
+    variable $topic-list;
     
     try {
         (: Try to get the unique topic-ARN by the given topic-name :)
-        set $topic-arn := topic:get-topicARN-by-topicName($topic-name,$aws-key,$aws-secret);
+        $topic-arn := topic:get-topicARN-by-topicName($topic-name,$aws-key,$aws-secret);
         
         (: if there´s no topic-ARN, the given topic-name does not exist already :)
         if(not($topic-arn))
         then
-            block {
+            {
                 
                 (: create a topic :)
-                declare $topic-arn := topic:create($aws-key,
+                variable $topic-arn := topic:create($aws-key,
                                                    $aws-secret,
                                                    $topic-name)[2]//sns:TopicArn/text();
                 
@@ -80,13 +78,13 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                 
                 
                 (: save the generated unique topic-ARN :)
-                set $topic-arn := data($response//aws:TopicArn[text()]);
+                $topic-arn := data($response//aws:TopicArn[text()]);
                 
                 (: AWS need some time to update the service :)
                 util:sleep(1);
                 
                 (: list all existing topics and save them for comparison :)
-                set $topic-list := topic:list($aws-key,$aws-secret);
+                $topic-list := topic:list($aws-key,$aws-secret);
                 
                 (: check if the created topic is in this list :)
                 let $exists := $topic-list//aws:Topics/aws:member/aws:TopicArn[text() eq $topic-arn]
@@ -94,20 +92,20 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                 
                     if($exists)
                     then
-                        block {
-                            set $success := true();
-                            set $msg := "Topic successfully created.";
+                        {
+                            $success := true();
+                             $msg := "Topic successfully created.";
                         }        
                     else
-                        set $msg := ("Topic was not created. Topic-list: ",$topic-list//aws:Topics/aws:member/aws:TopicArn[text()];);
+                        $msg := ("Topic was not created. Topic-list: ",$topic-list//aws:Topics/aws:member/aws:TopicArn[text()]);
             }
             else 
-                set $msg := "Topic was not created because the Topic-Name already exists";
+                $msg := "Topic was not created because the Topic-Name already exists";
 
                 
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
    
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
@@ -115,5 +113,5 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                         <topicARN>{$topic-arn}</topicARN>
                     </particular_test>
     ) as last into $testresult;
-    $testresult;
+    $testresult
 };

@@ -28,31 +28,29 @@ module namespace test = 'http://test/xaws/sdb/particular_tests/batch_delete_attr
 import module namespace domain = 'http://www.xquery.me/modules/xaws/sdb/domain' at '/uk/co/xquery/www/modules/xaws/sdb/domain.xq';
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '/uk/co/xquery/www/modules/xaws/helpers/error.xq';
 
-import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
-
 declare namespace aws = "http://sdb.amazonaws.com/doc/2009-04-15/";
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace err = "http://www.w3.org/2005/xqt-errors";
 
-declare sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
-    declare $success := false();
-    declare $msg := ();
-    declare $testname := "sdb_batch_delete_attributes";
-    declare $aws-key := string($testconfig/aws-key/text());
-    declare $aws-secret := string($testconfig/aws-secret/text());
-    declare $domain-name := string($testconfig/domain-name/text());
-    declare $items := $testconfig/items;
+declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
+    variable $success := false();
+    variable $msg := ();
+    variable $testname := "sdb_batch_delete_attributes";
+    variable $aws-key := string($testconfig/aws-key/text());
+    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $domain-name := string($testconfig/domain-name/text());
+    variable $items := $testconfig/items;
     
     try {
         (: delete the items :)
         domain:batch-delete-attributes($aws-key,$aws-secret,$domain-name,$items);
         
-        set $msg := "Items successfully deleted";
-        set $success := true();
+        $msg := "Items successfully deleted";
+        $success := true();
             
-    } catch * ($code,$message,$obj) { 
-        set $msg := error:to-string($code,$message,$obj);
-    };
+    } catch * { 
+        $msg := error:to-string($err:code,$err:description,$err:value);
+    }
     
     insert nodes (
                     <particular_test name="{$testname}" success="{$success}">
@@ -60,5 +58,5 @@ declare sequential function test:run($testconfig as element(config),$testresult 
                     </particular_test>
     ) as last into $testresult;
     
-    $testresult;
+    $testresult
 };
