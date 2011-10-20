@@ -22,49 +22,49 @@
  :)
 module namespace test = 'http://test/xaws/s3/particular_tests/bucket_create_delete';
 
-import module namespace bucket = 'http://www.xquery.me/modules/xaws/s3/bucket' at '../../../../../uk/co/xquery/www/modules/xaws/s3/bucket.xq';
-import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '../../../../../uk/co/xquery/www/modules/xaws/helpers/error.xq';
+import module namespace bucket = 'http://www.xquery.me/modules/xaws/s3/bucket';
+import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error';
+import module namespace config = "http://www.xquery.me/modules/xaws/s3/config";
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
 
 declare namespace aws = "http://s3.amazonaws.com/doc/2006-03-01/";
 declare namespace ann = "http://www.zorba-xquery.com/annotations";
 declare namespace err = "http://www.w3.org/2005/xqt-errors";
+declare namespace zerr = "http://www.zorba-xquery.com/errors";
 
 declare %ann:sequential function test:run($testconfig as element(config),$testresult as element(testresult)) as element(testresult) {
     variable $success := false();
     variable $msg := ();
     variable $testname := "bucket_create_delete";
-    variable $bucket-name := "test.XQuery.me.bucket";
-    variable $aws-key := string($testconfig/aws-key/text());
-    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $bucket-name := "test.xquery.me.bucket";
+    variable $aws-config := config:create($testconfig/aws-key/text(),$testconfig/aws-secret/text());
     
-    try {
-        bucket:create($aws-key,$aws-secret,$bucket-name);
+      bucket:create($aws-config,<create-config><acl>public-read</acl></create-config>, $bucket-name);
         
-        let $exists := bucket:list($aws-key,$aws-secret)//aws:Bucket/aws:Name[text() eq $bucket-name]
-        return 
-            if($exists)
-            then
-                {
-                    bucket:delete($aws-key,$aws-secret,$bucket-name);     
+      {
         
-                    let $result := bucket:list($aws-key,$aws-secret)
-                    let $exists := $result//aws:Bucket/aws:Name[text() eq $bucket-name]
-                    return 
-                        if(not($exists))
-                        then
-                            $success := true();
-                        else 
-                            $msg := ("Bucket was not deleted: ",$result);
-                }
-            else();
-
-    } catch * { 
-        $msg := error:to-string($err:code,$err:description,$err:value);
-    }
+        variable $create-result := bucket:list($aws-config);
+        variable $exists := $create-result//aws:Bucket/aws:Name[text() eq $bucket-name];
+        
+        if($exists)
+        then
+          {
+            bucket:delete($aws-config,$bucket-name);     
+        
+            let $result := bucket:list($aws-config)
+            let $exists := $result//aws:Bucket/aws:Name[text() eq $bucket-name]
+            return 
+              if(not($exists))
+              then
+                $success := true();
+              else 
+                $msg := ("Bucket was not deleted: ",error:serialize($result));
+          }
+        else 
+          $msg := ("Bucket was not created: ",error:serialize($create-result));
+      }
+        
     
     insert node <test name="{$testname}" success="{$success}">{$msg}</test> as last into $testresult;
     $testresult

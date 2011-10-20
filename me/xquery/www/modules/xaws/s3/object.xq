@@ -135,9 +135,9 @@ declare %ann:sequential function object:delete(
  :                                                         version="UIORUnfndfiufdisojhr398493jfdkjFJjkndnqUifhnw89493jJFJ" />);
  :
  :                         object:read($aws-config,
- :                                     factory:s3-object("test.xml","{$bucket}"));
+ :                                     factory:s3-object("test.xml",$bucket));
  :                         object:read($aws-config,
- :                                     factory:s3-object("test2.xml","{$bucket}","UIORUnfndfiufdisojhr398493jfdkjFJjkndnqUifhnw89493jJFJ"));
+ :                                     factory:s3-object("test2.xml",$bucket,"UIORUnfndfiufdisojhr398493jfdkjFJjkndnqUifhnw89493jJFJ"));
  :                     </code> 
  :                   The example above shows how an s3-object element can conveniently be referenced using the <code>s3-object</code>
  :                   functions from the <a href="http://www.xquery.me/modules/xaws/s3/factory">factory</a> module.
@@ -155,7 +155,7 @@ declare %ann:sequential function object:read(
     let $request := if($s3-object/@version)
                     then request_helper:create("GET",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
                     else request_helper:create("GET",$href)
-    let $response := 1 (: request:send($request) :) (: TODO :)
+    let $response := request:send($aws-config,$request,$bucket,$s3-object/@key)
     let $metadata :=
         <metadata>
         {
@@ -168,7 +168,7 @@ declare %ann:sequential function object:read(
         </metadata>
     return
         ($response[1],
-         factory:s3-object($s3-object/@key,$s3-object/@bucket,$s3-object/@version,$metadata,$response[2]))
+         factory:s3-object($s3-object/@key,$s3-object/@bucket,$s3-object/@version,$metadata,$response[2]));
 };
 
 (:~
@@ -241,7 +241,7 @@ declare %ann:sequential function object:metadata(
     let $request := if($s3-object/@version)
                     then request_helper:create("HEAD",$href,<parameter name="versionId" value="{$s3-object/@version}" />)
                     else request_helper:create("HEAD",$href)
-    let $response := 1 (: request:send($request) :) (: TODO :)
+    let $response := request:send($aws-config,$request,$bucket,$s3-object/@key)
     let $metadata :=
         <metadata>
         {
@@ -254,7 +254,7 @@ declare %ann:sequential function object:metadata(
         </metadata>
     return
         ($response[1],
-         factory:s3-object($s3-object/@key,$s3-object/@bucket,$s3-object/@version,$metadata,()))
+         factory:s3-object($s3-object/@key,$s3-object/@bucket,$s3-object/@version,$metadata,()));
 };
 
 
@@ -303,11 +303,7 @@ declare %ann:sequential function object:torrent(
     let $href as xs:string := request_helper:href($aws-config, concat($bucket, ".s3.amazonaws.com/",$s3-object/@key))
     let $request := request_helper:create("GET",$href,<parameter name="torrent" />)
     return 
-      1
-    (:
-        TODO 
-        request:send($request)
-    :)
+      request:send($aws-config,$request,$bucket,$s3-object/@key);
 };
 
 (:~
@@ -406,11 +402,96 @@ declare %ann:sequential function object:write(
     
     let $request := request_helper:create("PUT",$href,()(:no parameters:), $headers, $media-type, $serialize-method, $content)
     return 
-      1
-      (: TODO
-       request:send($request)[1]
-       :)
+      request:send($aws-config,$request,$bucket,$s3-object/@key)[1];
 };
+
+(:~
+ : Copy a specific version of an object that is already stored on s3 into a target bucket.
+ : If no target bucket is provided the target object will be stored in the context-bucket if provided
+ : by the aws-config element, otherwise in the same bucket as the source object. 
+ : The access rights of the source object are not copied with this function. 
+ : By default, if not set explicitly, this function sets the target object access right to private. 
+ : 
+ : Additionaly, you can provide any metadata to replace the source object's metadata with in the target object. 
+ : If no metadata is provided the metadata of the source object will be copied.
+ : If you want to remove the metadata from the source object provide an empty object:metadata element.
+ : 
+ : Example copying an <code>s3-object</code>:
+ : <code type="xquery">
+ :   import module namespace object = 'http://www.xquery.me/modules/xaws/s3/object';
+ :   import module namespace const = 'http://www.xquery.me/modules/xaws/s3/constants';
+ :   import module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory';
+ :   import module namespace config = 'http://www.xquery.me/modules/xaws/s3/config';
+ :
+ :   variable $aws-config := config:create("aws-key","aws-secret");
+ :   variable $s3-object-src := 
+ :     factory:s3-object(
+ :       "test.xml",
+ :       "www.xquery.me");
+ :   variable $s3-object-target :=
+ :     <object:s3-object key="test-copy.xml" 
+ :                       bucket="www.xquery.me"
+ :                       permisstion="{$const:ACL-GRANT-PUBLIC-READ}">
+ :       <object:metadata>
+ :         <author>jon</author>
+ :       </object:metadata>
+ :     </object:s3-object>;
+ :
+ :   object:copy($aws-config,
+ :               $s3-object-src,
+ :               $s3-object-target,
+ :               ());
+ : </code>
+ : 
+ : The example above shows how an s3-object element can conveniently be referenced using the <code>s3-object</code>
+ : functions from the <a href="http://www.xquery.me/modules/xaws/s3/factory">factory</a> module.
+ : In the shown example, the metadata of the source object will be replaced by the provided metadata.
+ : 
+ : @param $aws-config The aws-config element containing authentication information for connections
+ :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ : @param $s3-object-source the source s3 object that is copied. 
+ : @param $s3-object-target the target s3 object to copy the source object to. A version attribute is ignored in this function. 
+ : @param $reduced-redundancy optionally, you can store any data with reduced redundancy to save cost.
+ :                            You should do this only for uncritical reproducable data. By default 
+ :                            $reduced-redundancy is turned off.
+ :)
+declare %ann:sequential function object:copy(
+    $aws-config as element(aws-config),
+    $s3-object-source as element(s3-object),
+    $s3-object-target as element(s3-object),
+    $reduced-redundancy as xs:boolean?
+) as item()* {    
+
+    let $source-bucket as xs:string := if($s3-object-source/@bucket)then $s3-object-source/@bucket else string($aws-config/context-bucket/text())
+    let $target-bucket as xs:string := 
+      let $tmp := if($s3-object-target/@bucket)then $s3-object-target/@bucket else string($aws-config/context-bucket)
+      return 
+        if($tmp) then $tmp else $source-bucket
+
+    let $source-href as xs:string := concat("/", $source-bucket, "/", $s3-object-source/@key)
+    let $target-href as xs:string := 
+      request_helper:href($aws-config, concat($target-bucket, ".s3.amazonaws.com/",$s3-object-target/@key))
+    
+    let $headers := (
+            (: TODO add content lenght and content md5 :)
+            if($reduced-redundancy) then <header name="x-amz-storage-class" value="REDUCED_REDUNDANCY" /> else (),
+            if($s3-object-source/@permission) then <header name="x-amz-acl" value="{string($s3-object-source/@permission)}" /> else (),
+            for $meta in $s3-object-source/object:metadata/node()
+            let $name := concat("x-amz-meta-",$meta/local-name())
+            let $value := string($meta/text())
+            return <http:header name="{$name}" value="{$value}" />,
+            if($s3-object-source/object:metadata) 
+            then <header name="x-amz-metadata-directive" value="REPLACE" />
+            else <header name="x-amz-metadata-directive" value="COPY" />
+      )
+
+    let $request := 
+      request_helper:create("PUT",$target-href,()(:no parameters:), $headers)
+    return 
+      request:send($aws-config,$request,$target-bucket,$s3-object-target/@key)[1];
+};
+
 
 (:~
  : Get the access control list (ACL) of an S3 object or even of an particular version of an object. The ACL is 
@@ -488,10 +569,7 @@ declare %ann:sequential function object:permissions(
                         <parameter name="acl" />)
     let $request := request_helper:create("GET",$href,$parameters)
     return 
-      1
-      (: TODO
-        request:send($request)
-      :)
+      request:send($aws-config,$request,$bucket,$s3-object/@key);
 };
 
 (:~
@@ -582,10 +660,7 @@ declare %ann:sequential function object:permission-set(
         </AccessControlPolicy>
     let $request := request_helper:create("PUT",$href,$parameters,()(:no headers:),"application/xml","xml",$acl)
     return 
-      (: TODO
-        (request:send($request)[1], $acl)
-      :)
-      1
+      (request:send($aws-config,$request,$bucket,$s3-object/@key)[1], $acl);
 };
 
 (:~
@@ -649,9 +724,8 @@ declare %ann:sequential function object:permission-set(
  :         is the AccessControlPolicy element that has been set for the object (contains all granted access rights)
 :)
 (: TODO this needs to be tested. I don't think that it works this way :)
-declare %ann:sequential function object:grant-permission(
-    $aws-access-key as xs:string, 
-    $aws-secret as xs:string,
+(:declare %ann:sequential function object:grant-permission(
+    $aws-config as element(aws-config),
     $bucket as xs:string,
     $key as xs:string,
     $grantee as xs:string,
@@ -662,10 +736,10 @@ declare %ann:sequential function object:grant-permission(
     let $request := request_helper:create("PUT",$href,<parameter name="acl" />)
     return 
       {
-            (: get the current acl of the object :)
-            variable $access-control-policy := 1; (: TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key); :)
+            ( : get the current acl of the object : )
+            variable $access-control-policy := object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key); 
             
-            (: modify policy: add or update grant :)
+            ( : modify policy: add or update grant : )
             let $current-grant := 
                 $access-control-policy/AccessControlPolicy/AccessControlList/Grant
                     [Grantee/ID=$grantee or Grantee/DisplayName=$grantee or Grantee/URI=$grantee]
@@ -677,10 +751,10 @@ declare %ann:sequential function object:grant-permission(
                         factory:config-grant($grantee,$permission) 
                      as last into $access-control-policy/AccessControlPolicy/AccessControlList; 
                 
-            (: add acl config body :)
+            ( : add acl config body : )
             request:add-acl-grantee($request,$access-control-policy);
             
-            (: sign the request :)
+            ( : sign the request : )
             request:sign(
                 $request,
                 $bucket,
@@ -688,12 +762,9 @@ declare %ann:sequential function object:grant-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            (:request_helper:send($request),$access-control-policy) :)
+            request_helper:send($request),$access-control-policy)
      }
-};
-
-
-
+};:)
 
 
 (:~
@@ -712,7 +783,7 @@ declare %ann:sequential function object:grant-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the AccessControlPolicy element that has been set for the bucket (contains all granted access rights)
 :)
-declare %ann:sequential function object:remove-permission(
+(:declare %ann:sequential function object:remove-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $bucket as xs:string,
@@ -724,10 +795,10 @@ declare %ann:sequential function object:remove-permission(
     let $request := request_helper:create("PUT",$href,<parameter name="acl" />)
     return 
       {
-            (: get the current acl of the object :)
-            variable $access-control-policy := 1 (: TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key); :);
+            ( : get the current acl of the object : )
+            variable $access-control-policy := 1 ( : TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key); : );
             
-            (: modify policy: remove grant :)
+            ( : modify policy: remove grant : )
             let $current-grant := 
                 $access-control-policy/AccessControlPolicy/AccessControlList/Grant
                     [Grantee/ID=grantee or Grantee/DisplayName=grantee or Grantee/URI=grantee]
@@ -737,10 +808,10 @@ declare %ann:sequential function object:remove-permission(
                     delete node $current-grant;
                 else (); 
                 
-            (: add acl config body :)
+            ( : add acl config body : )
             request:add-acl-grantee($request,$access-control-policy);
             
-            (: sign the request :)
+            ( : sign the request : )
             request:sign(
                 $request,
                 $bucket,
@@ -748,9 +819,9 @@ declare %ann:sequential function object:remove-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            (: TODO request:send($request),$access-control-policy:)
+            ( : TODO request:send($request),$access-control-policy: )
       }
-};
+};:)
 
 
 (:~
@@ -768,7 +839,7 @@ declare %ann:sequential function object:remove-permission(
  : @return returns a pair of two items, the first is the http reponse data (headers, statuscode,...), the second
  :         is the AccessControlPolicy element that has been set for the bucket (contains all granted access rights)
 :)
-declare %ann:sequential function object:remove-permission(
+(:declare %ann:sequential function object:remove-permission(
     $aws-access-key as xs:string, 
     $aws-secret as xs:string,
     $bucket as xs:string,
@@ -785,10 +856,10 @@ declare %ann:sequential function object:remove-permission(
                                   )
     return 
       {
-            (: get the current acl of the object version :)
-            variable $access-control-policy := 1 (: TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key,$version-id); :);
+            ( : get the current acl of the object version : )
+            variable $access-control-policy := 1 ( : TODO object:get-config-acl($aws-access-key,$aws-secret,$bucket,$key,$version-id); : );
             
-            (: modify policy: remove grant :)
+            ( : modify policy: remove grant : )
             let $current-grant := 
                 $access-control-policy/AccessControlPolicy/AccessControlList/Grant
                     [Grantee/ID=grantee or Grantee/DisplayName=grantee or Grantee/URI=grantee]
@@ -798,10 +869,10 @@ declare %ann:sequential function object:remove-permission(
                     delete node $current-grant;
                 else (); 
                 
-            (: add acl config body :)
+            ( : add acl config body : )
             request:add-acl-grantee($request,$access-control-policy);
             
-            (: sign the request :)
+            ( : sign the request : )
             request:sign(
                 $request,
                 $bucket,
@@ -809,218 +880,8 @@ declare %ann:sequential function object:remove-permission(
                 $aws-access-key,
                 $aws-secret);
                 
-            (:request:send($request),$access-control-policy:)
+            ( :request:send($request),$access-control-policy: )
       }
-};
-
-(:~
- : Copy an object that is already stored on s3 into a different object in the same bucket in which the source object resides. 
- : The access rights of the source object are not copied with this function. By default, this function sets the target object 
- : access right to private. 
- : 
- : If versioning is enabled for that object this functions copies the latest version of the object. 
- : 
- : @param $aws-access-key Your personal "AWS Access Key" that you can get from your amazon account 
- : @param $aws-secret Your personal "AWS Secret" that you can get from your amazon account
- : @param $bucket the name of the bucket from which an object is to be copied and into that the target object is written
- : @param $source-key the key of the object to copy from
- : @param $target-key the key of the object to copy to
- : @return returns the http reponse data (headers, statuscode,...)
-:)
-declare %ann:sequential function object:copy(
-    $aws-access-key as xs:string, 
-    $aws-secret as xs:string,
-    $bucket as xs:string,
-    $source-key as xs:string,
-    $target-key as xs:string
-) as item()* {    
-    object:copy(
-        $aws-access-key, 
-        $aws-secret,
-        $bucket,
-        $source-key,
-        $bucket,
-        $target-key,
-        (),
-        (),
-        ()
-    )
-};
-
-(:~
- : Copy an object that is already stored on s3 into a target bucket. The access rights of the source object are
- : not copied with this function. By default, this function sets the target object access right to private. 
- : 
- : If versioning is enabled for that object this functions copies the latest version of the object. 
- : 
- : @param $aws-access-key Your personal "AWS Access Key" that you can get from your amazon account 
- : @param $aws-secret Your personal "AWS Secret" that you can get from your amazon account
- : @param $source-bucket the name of the bucket from which an object is to be copied
- : @param $source-key the key of the object to copy from
- : @param $target-bucket the name of the bucket to copy the source-object to
- : @param $target-key the key of the object to copy to
- : @return returns the http reponse data (headers, statuscode,...)
-:)
-declare %ann:sequential function object:copy(
-    $aws-access-key as xs:string, 
-    $aws-secret as xs:string,
-    $source-bucket as xs:string,
-    $source-key as xs:string,
-    $target-bucket as xs:string,
-    $target-key as xs:string
-) as item()* {    
-    object:copy(
-        $aws-access-key, 
-        $aws-secret,
-        $source-bucket,
-        $source-key,
-        $target-bucket,
-        $target-key,
-        (),
-        (),
-        ()
-    )
-};
-
-(:~
- : Copy an object that is already stored on s3 into a target bucket. The access rights of the source object are
- : not copied with this function. By default, this function sets the target object access right to private. 
- : 
- : If versioning is enabled for that object this functions copies the latest version of the object. 
- : 
- : Additionaly, you can provide any metadata to replace the source object's metadata with in the target object. For example:
- :
- : <pre>
- :   <code>
- :   <![CDATA[
- : <metadata>
- :    <author>Jon</author>
- :    <author>Jane</author>
- :    <category>XQuery</category>
- : </metadata>
- :   ]]>
- :   </code>
- : </pre>
- : 
- : 
- : @param $aws-access-key Your personal "AWS Access Key" that you can get from your amazon account 
- : @param $aws-secret Your personal "AWS Secret" that you can get from your amazon account
- : @param $source-bucket the name of the bucket from which an object is to be copied
- : @param $source-key the key of the object to copy from
- : @param $target-bucket the name of the bucket to copy the source-object to
- : @param $target-key the key of the object to copy to
- : @param $acl the permission to be granted to everybody (see <a href="http://www.xquery.me/modules/xaws/s3/constants">constants</a>
- :                 for convenience variables <code>$const:ACL-GRANT-...</code>) for the target object
- : @param $metadata optionally, you can provide any custom metadata to the target object of the copy function. If $metadata parameter
- :                  is an empty sequence then the source object's metadata is copied. In order to simply replace the source object metadata
- :                  with no metadata pass an empty <code>&lt;metadata /></code> element
- : @param $reduced-redundancy optionally, you can store any data with reduced redundancy to save cost.
- :                            You should do this only for uncritical reproducable data. Per default 
- :                            $reduced-redundancy is turned off.
- : @return returns the http reponse data (headers, statuscode,...)
-:)
-declare %ann:sequential function object:copy(
-    $aws-access-key as xs:string, 
-    $aws-secret as xs:string,
-    $source-bucket as xs:string,
-    $source-key as xs:string,
-    $target-bucket as xs:string,
-    $target-key as xs:string,
-    $acl as xs:string?,
-    $metadata as element(metadata)?,
-    $reduced-redundancy as xs:boolean?
-) as item()* {    
-
-    object:copy(
-        $aws-access-key, 
-        $aws-secret,
-        $source-bucket,
-        $source-key,
-        $target-bucket,
-        $target-key,
-        (),
-        (),
-        (),
-        ()
-    )
-};
+};:)
 
 
-(:~
- : Copy a specific version of an object that is already stored on s3 into a target bucket. The access rights of the source object are
- : not copied with this function. By default, this function sets the target object access right to private. 
- : 
- : Additionaly, you can provide any metadata to replace the source object's metadata with in the target object. For example:
- :
- : <pre>
- :   <code>
- :   <![CDATA[
- : <metadata>
- :    <author>Jon</author>
- :    <author>Jane</author>
- :    <category>XQuery</category>
- : </metadata>
- :   ]]>
- :   </code>
- : </pre>
- : 
- : 
- : @param $aws-access-key Your personal "AWS Access Key" that you can get from your amazon account 
- : @param $aws-secret Your personal "AWS Secret" that you can get from your amazon account
- : @param $source-bucket the name of the bucket from which an object is to be copied
- : @param $source-key the key of the object to copy from
- : @param $target-bucket the name of the bucket to copy the source-object to
- : @param $target-key the key of the object to copy to
- : @param $acl the permission to be granted to everybody (see <a href="http://www.xquery.me/modules/xaws/s3/constants">constants</a>
- :                 for convenience variables <code>$const:ACL-GRANT-...</code>) for the target object
- : @param $metadata optionally, you can provide any custom metadata to the target object of the copy function. If $metadata parameter
- :                  is an empty sequence then the source object's metadata is copied. In order to simply replace the source object metadata
- :                  with no metadata pass an empty <code>&lt;metadata /></code> element
- : @param $reduced-redundancy optionally, you can store any data with reduced redundancy to save cost.
- :                            You should do this only for uncritical reproducable data. Per default 
- :                            $reduced-redundancy is turned off.
- : @param $version-id the version id of the source object to be copied 
- : @return returns the http reponse data (headers, statuscode,...)
-:)
-declare %ann:sequential function object:copy(
-    $aws-access-key as xs:string, 
-    $aws-secret as xs:string,
-    $source-bucket as xs:string,
-    $source-key as xs:string,
-    $target-bucket as xs:string,
-    $target-key as xs:string,
-    $acl as xs:string?,
-    $metadata as element(metadata)?,
-    $reduced-redundancy as xs:boolean?,
-    $version-id as xs:string?
-) as item()* {    
-
-    let $href as xs:string := concat("http://", $target-bucket, ".s3.amazonaws.com/", $target-key)
-    let $request := 
-        if ($version-id) 
-        then
-            request_helper:create("PUT",$href,<parameter name="versionId" value="{$version-id}" />)
-        else
-            request_helper:create("PUT",$href)
-    return 
-      {
-            (: TODO
-                request:add-acl-everybody($request,$acl),
-                request:add-metadata($request,$metadata/*),
-                request:add-copy-source($request,$source-bucket,$source-key),
-                if($metadata) then request:add-replace-metadata-flag($request) else (),
-                if($reduced-redundancy)then  TODO request:add-reduced-redundancy($request) else ()
-            );
-            :)
-                
-            (: sign the request :)
-            request:sign(
-                $request,
-                $target-bucket,
-                $target-key,
-                $aws-access-key,
-                $aws-secret);
-                
-            (: TODO request:send($request) :)
-     }
-};

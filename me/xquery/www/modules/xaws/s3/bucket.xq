@@ -49,7 +49,7 @@ declare namespace ann = "http://www.zorba-xquery.com/annotations";
  :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
  : @param $bucket the name of the bucket to be deleted  
  : @return returns the http response information (header,statuscode,...) 
-:)
+:) 
 declare %ann:sequential function bucket:delete(
     $aws-config as element(aws-config), 
     $bucket as xs:string?
@@ -99,7 +99,7 @@ declare %ann:sequential function bucket:delete(
 :)
 declare %ann:sequential function bucket:list(
     $aws-config as element(aws-config)
-) as item()* {
+) as item()+ {
 
     let $href as xs:string := request:href($aws-config, "s3.amazonaws.com")
     let $request := request:create("GET",$href)
@@ -640,15 +640,14 @@ declare %ann:sequential function bucket:grant-permission(
 
     let $bucket as xs:string := if($bucket)then $bucket else string($aws-config/context-bucket/text())
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
-    let $request := request:create("PUT",$href,<parameter name="acl" />)
     return 
       {
             (: get the current acl of the bucket :)
-            variable $access-control-policy := bucket:get-config-acl($aws-config,$bucket)[2];
+            variable $acl := bucket:get-config-acl($aws-config,$bucket)[2];
             
             (: modify policy: add or update grant :)
             let $current-grant := 
-                $access-control-policy/AccessControlPolicy/AccessControlList/Grant
+                $acl/AccessControlPolicy/AccessControlList/Grant
                     [Grantee/ID=$grantee or Grantee/DisplayName=$grantee or Grantee/URI=$grantee]
             return
                 if($current-grant)
@@ -656,14 +655,12 @@ declare %ann:sequential function bucket:grant-permission(
                     replace value of node $current-grant/Permission with $permission;
                 else insert node 
                         factory:config-grant($grantee,$permission)
-                     as last into $access-control-policy/AccessControlPolicy/AccessControlList; 
-                
-            (: add updated acl config body to the request :)
-            s3_request:add-acl-grantee($request,$access-control-policy);
+                     as last into $acl/AccessControlPolicy/AccessControlList; 
             
+            let $request := request:create("PUT",$href,<parameter name="acl" />,()(:no headers:),"application/xml","xml",$acl)
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$access-control-policy)
+                ($response,$acl);
      }
 };
 
@@ -722,15 +719,14 @@ declare %ann:sequential function bucket:remove-permission(
 
     let $bucket as xs:string := if($bucket)then $bucket else string($aws-config/context-bucket/text())
     let $href as xs:string := request:href($aws-config, concat($bucket, ".s3.amazonaws.com"))
-    let $request := request:create("PUT",$href,<parameter name="acl" />)
     return 
       {
             (: get the current acl of the bucket :)
-            variable $access-control-policy := bucket:get-config-acl($aws-config,$bucket)[2];
+            variable $acl := bucket:get-config-acl($aws-config,$bucket)[2];
             
             (: modify policy: remove grant :)
             let $current-grant := 
-                $access-control-policy/AccessControlPolicy/AccessControlList/Grant
+                $acl/AccessControlPolicy/AccessControlList/Grant
                     [Grantee/ID=grantee or Grantee/DisplayName=grantee or Grantee/URI=grantee]
             return
                 if($current-grant)
@@ -738,12 +734,10 @@ declare %ann:sequential function bucket:remove-permission(
                     delete node $current-grant;
                 else (); 
                 
-            (: add updated acl config body to the request :)
-            s3_request:add-acl-grantee($request,$access-control-policy);
-            
+            let $request := request:create("PUT",$href,<parameter name="acl" />,()(:no headers:),"application/xml","xml",$acl)
             let $response := s3_request:send($aws-config,$request,$bucket,(:empty object key:)"")
             return 
-                ($response,$access-control-policy)
+                ($response,$acl);
       }
 };
 

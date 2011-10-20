@@ -64,6 +64,25 @@ declare function request:create(
 };
 
 (:~
+ : Create an http request with a query string build with the provided parameters.
+ :
+ : @param $method the http method to be used for the request (GET,POST,PUT,HEAD,...)
+ : @param $href the targeted href URL for the request
+ : @param $parameters a sequence of <code>parameter</code> elements each having a <code>name</code>
+ :                    and a <code>value</code> attribute.
+ : @param $headers a sequence of <code>header</code> elements each having a <code>name</code>
+ :                    and a <code>value</code> attribute.
+ : @return the newly created http request
+:)
+declare function request:create(
+    $method as xs:string,
+    $href as xs:string,
+    $parameters as element(parameter)*,
+    $headers as element(header)*) as element(http:request) {
+    request:create($method,$href,$parameters,$headers, (),(),())
+};
+
+(:~
  : Create an http request with a query string build with the provided parameters
  :
  : @param $method the http method to be used for the request (GET,POST,PUT,HEAD,...)

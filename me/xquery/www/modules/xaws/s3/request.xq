@@ -53,7 +53,7 @@ declare %ann:sequential function request:send(
     $aws-config as element(aws-config),
     $request as element(http:request),
     $bucket-name as xs:string,
-    $object-key as xs:string) as item()* {
+    $object-key as xs:string) as item()+ {
 
     (: sign the request :)
     request:sign(
@@ -83,7 +83,7 @@ declare updating function request:sign(
     $aws-key as xs:string,
     $aws-secret as xs:string) {
     let $canonical as xs:string :=
-         (: trace( :)
+          (: trace( :) 
            string-join(
                 (
                     (: method :)
@@ -110,8 +110,8 @@ declare updating function request:sign(
                         
                     (: add complete key :)
                     "/",
-                    if ($bucketname eq "") then () else ($bucketname,"/"),
-                    if ($object-key eq "") then () else $object-key,
+                    if ($bucketname eq "") then () else (lower-case($bucketname),"/"),
+                    if ($object-key eq "") then () else lower-case($object-key),
                     
                     (: @TODO: add eventually acl, location, logging, versions or torrent parameters from url :)
                     let $href := string($request/@href)
@@ -123,60 +123,10 @@ declare updating function request:sign(
                     return ()
                )
             ,"")
-            (:,"canonicalString"):)
+            (: ,"canonicalString") :)
     let $signature as xs:string := hmac:sha1($canonical,$aws-secret)
     let $auth-header := <http:header name="Authorization" value="AWS {$aws-key}:{$signature}" />
     return insert node $auth-header as first into $request
 };
 
 
-(:~
- : Add a header to indicate that the value of an object should be copied from a source object instead of
- : from the body of a request.
- : 
-:)
-declare updating function request:add-copy-source(
-    $request as element(http:request),$source-bucket as xs:string, $source-object as xs:string){
-
-    let $copy-source-header := <http:header name="x-amz-copy-source" value="{concat($source-bucket, "/", $source-object)}" />
-    return
-        insert node $copy-source-header as first into $request 
-};
-
-(:~
- : Add a header to indicate that the metadata of the source object of a copy operation should be overwritten 
- : instead of being copied.
- : 
-:)
-declare updating function request:add-replace-metadata-flag($request as element(http:request)){
-
-    insert node 
-        <http:header name="x-amz-metadata-directive" value="REPLACE" />
-        as first into $request 
-};
-
-(:~
- : add an acl policy to the request
- : 
-:)
-declare updating function request:add-acl-grantee(
-    $request as element(http:request),$acl as element(AccessControlPolicy)){
-
- (: TODO :)
-    (: common_request:add-content-xml($request,$acl) :)
-};
-
-
-(:~
- : add an metadata to the request
- : 
-:)
-declare updating function request:add-metadata($request as element(http:request),$metadata as element()*){
-
-    for $meta in $metadata
-    let $name := concat("x-amz-meta-",$meta/local-name())
-    let $value := string($meta/text())
-    let $meta-header := <http:header name="{$name}" value="{$value}" />
-    return
-        insert node $meta-header as first into $request 
-};

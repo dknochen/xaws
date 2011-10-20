@@ -38,10 +38,10 @@ declare variable $aws-secret as xs:string external;
 
 declare variable $tests :=
     <tests>
-        <bucket_create_delete run="false" />
+        <bucket_create_delete run="true" />
         <buckets_list run="false" />
         <bucket_list_objects run="false" />
-        <object_write_read_copy run="true" />
+        <object_write_read_copy run="false" />
     </tests>;
 
 declare variable $testconfig :=

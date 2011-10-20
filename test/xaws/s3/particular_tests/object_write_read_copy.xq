@@ -22,12 +22,12 @@
  :)
 module namespace test = 'http://test/xaws/s3/particular_tests/object_write_read_copy';
 
-import module namespace object = 'http://www.xquery.me/modules/xaws/s3/object' at '../../../../../uk/co/xquery/www/modules/xaws/s3/object.xq';
-import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error' at '../../../../../uk/co/xquery/www/modules/xaws/helpers/error.xq';
+import module namespace object = 'http://www.xquery.me/modules/xaws/s3/object';
+import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error';
+import module namespace config = "http://www.xquery.me/modules/xaws/s3/config";
+import module namespace factory = 'http://www.xquery.me/modules/xaws/s3/factory';
 
 import module namespace http = "http://expath.org/ns/http-client";
-import module namespace ser = "http://www.zorba-xquery.com/modules/serialize";
-import module namespace hash = "http://www.zorba-xquery.com/modules/security/hash";
 
 declare namespace aws = "http://s3.amazonaws.com/doc/2006-03-01/";
 declare namespace ann = "http://www.zorba-xquery.com/annotations";
@@ -37,8 +37,7 @@ declare %ann:sequential function test:run($testconfig as element(config),$testre
     variable $success := false();
     variable $msg := ();
     variable $testname := "object_write_read";
-    variable $aws-key := string($testconfig/aws-key/text());
-    variable $aws-secret := string($testconfig/aws-secret/text());
+    variable $aws-config := config:create($testconfig/aws-key/text(),$testconfig/aws-secret/text());
     variable $bucketname := string($testconfig/bucketname/text());
     
     variable $xmlkey := "test.xml";
@@ -50,8 +49,12 @@ declare %ann:sequential function test:run($testconfig as element(config),$testre
     World";
         
     (: check writing text data :)
-    object:write($aws-key,$aws-secret,$bucketname,$textkey,$textdata);
-    let $result := object:read($aws-key,$aws-secret,$bucketname,$textkey)[2]
+    object:write($aws-config,
+                 factory:s3-object($textkey,$bucketname, (), (),$textdata),
+                 ()
+                 );
+    let $result := object:read($aws-config,
+                               factory:s3-object($textkey, $bucketname))[2]/object:content/node()
     return
         if($result eq $textdata)
         then
@@ -73,8 +76,12 @@ declare %ann:sequential function test:run($testconfig as element(config),$testre
             }
             
     (: check writing xml data :)
-    object:write($aws-key,$aws-secret,$bucketname,$xmlkey,$xmldata);
-    let $result := object:read($aws-key,$aws-secret,$bucketname,$xmlkey)[2]
+    object:write($aws-config,
+                 factory:s3-object($xmlkey,$bucketname, (), (),$xmldata),
+                 ()
+                 );
+    let $result := object:read($aws-config,
+                               factory:s3-object($xmlkey,$bucketname))[2]/object:content/node()
     return
         if(deep-equal($result,$xmldata))
         then
@@ -95,7 +102,7 @@ declare %ann:sequential function test:run($testconfig as element(config),$testre
                     </write_read_xml>);
             }
    
-    (: check copy object :)
+    (: check copy object 
     object:copy($aws-key,$aws-secret,$bucketname,$xmlkey,$xmlkeycopy);
     let $result := object:read($aws-key,$aws-secret,$bucketname,$xmlkeycopy)[2]
     return
@@ -116,7 +123,7 @@ declare %ann:sequential function test:run($testconfig as element(config),$testre
                         <returned>{$result}</returned>
                         <orig>{$xmldata}</orig>
                     </copy_xml>);
-            }
+            }:)
     
     insert node <test name="{$testname}" success="{$success}">{$msg}</test> as last into $testresult;
     $testresult

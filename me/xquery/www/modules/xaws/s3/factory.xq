@@ -67,6 +67,7 @@ declare function factory:s3-object ($key as xs:string,
     {
         if($bucket) then attribute bucket { $bucket } else (),
         if($permission) then attribute permission { $permission } else (),
+        if($version) then attribute version { $version } else (),
         if($metadata) then
           <object:metadata>{ $metadata/node() }</object:metadata> 
         else (),
