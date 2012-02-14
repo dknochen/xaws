@@ -47,7 +47,7 @@ declare namespace ann = "http://www.zorba-xquery.com/annotations";
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-name The topic name
  : @return returns the unique topic-ARN found by the topic name
 :)
@@ -67,7 +67,7 @@ declare %ann:sequential function topic:get-topicARN-by-topicName(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:ListTopicResponse element 
 :)
@@ -85,7 +85,7 @@ declare %ann:sequential function topic:list(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $next-token Token returned by the previous request. Can be passed along to the next request
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:ListTopicResponse element 
@@ -114,7 +114,7 @@ declare %ann:sequential function topic:list(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $name The name of the topic you want to create. Topic names must be made up of only uppercase and lowercase ASCII letters, numbers, and hyphens, and must be between 1 and 256 characters long
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:CreateTopicResponse element 
@@ -141,7 +141,7 @@ declare %ann:sequential function topic:create(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID (can be generated from the topic-name)
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:DeleteTopicResponse element
@@ -168,7 +168,7 @@ declare %ann:sequential function topic:delete(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:ListSubscriptionsResponse element
 :)
@@ -185,7 +185,7 @@ declare %ann:sequential function topic:list-subscriptions(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $next-token Token returned by the previous request. Can be passed along to the next request
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:ListSubscriptionsResponse element
@@ -214,7 +214,7 @@ declare %ann:sequential function topic:list-subscriptions(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID 
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:ListSubscriptionsByTopicResponse element
@@ -233,7 +233,7 @@ declare %ann:sequential function topic:list-subscriptions-by-topic(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID 
  : @param $next-token Token returned by the previous request. Can be passed along to the next request
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
@@ -271,7 +271,7 @@ declare %ann:sequential function topic:list-subscriptions-by-topic(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID 
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:GetTopicAttributesResponse element
@@ -298,7 +298,7 @@ declare %ann:sequential function topic:get-topic-attributes(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID 
  : @param $display-name The new value to be set for the display name
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
@@ -357,7 +357,7 @@ declare %ann:sequential function topic:set-display-name(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $subscription Element containing the topic arn, protocol, and endpoint (e.g. url, email adress) for the subscription
  :                      (see example and more details above)
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
@@ -396,7 +396,7 @@ declare %ann:sequential function topic:subscribe(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $subscription-arn The ARN of the subscription to be deleted 
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:UnsubscribeResponse element
@@ -443,7 +443,7 @@ declare %ann:sequential function topic:confirm-subscription(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID
  : @param $token The token sent to an endpoint during the Subscribe action 
  : @param $authenticate-on-unsubscribe valid values are True or False. Indicates that the user want to disable unauthenticated unsubsciption of the subscription (Therefore you have to sign the request)
@@ -502,7 +502,7 @@ declare %ann:sequential function topic:confirm-subscription(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $notification Element containing the topic arn, a subject (optional), and a message text for a notification (see example above)
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
  :         the sns:PublishResponse element
@@ -562,7 +562,7 @@ declare %ann:sequential function topic:publish(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $permissions Element containing a unique label identifying these permissions, the topic arn, AWS account 
  :                     ids, and actions for granting permissions (see example above)
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing
@@ -597,7 +597,7 @@ declare %ann:sequential function topic:add-permissions(
  :
  : @param $aws-config The aws-config element containing authentication information for connections
  :                    to S3. The aws-config element can conveniently be created using the <code>create</code>
- :                    function within the <a href="http://www.xquery.me/modules/xaws/s3/config">config</a> module.
+ :                    function within the <a href="http://www.xquery.me/modules/xaws/helpers/config">config</a> module.
  : @param $topic-arn The Topic ID
  : @param $label The unique identifier for the policy statement to be deleted
  : @return returns a pair of 2 items. The first is the http response information; the second is the response document containing

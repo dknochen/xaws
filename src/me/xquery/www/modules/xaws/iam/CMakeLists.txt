@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ADD_SUBDIRECTORY(helpers)
-ADD_SUBDIRECTORY(iam)
-ADD_SUBDIRECTORY(s3)
-ADD_SUBDIRECTORY(sdb)
-ADD_SUBDIRECTORY(sns)
+DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/error" VERSION 1.0 FILE "error.xq")
+DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/request" VERSION 1.0 FILE "request.xq")
+DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/user" VERSION 1.0 FILE "user.xq")
