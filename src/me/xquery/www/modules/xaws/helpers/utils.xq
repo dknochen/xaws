@@ -19,7 +19,8 @@
  : </p>
  :
  : @author Klaus Wichmann klaus [at] xquery [dot] co [dot] uk
- :)
+ : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+:)
 module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
 
 import module namespace http = "http://expath.org/ns/http-client";
@@ -81,5 +82,11 @@ declare updating function utils:insert-replace ($target-node as element(), $inse
             replace node $replace-node with $insert-replace
         else
            insert node $insert-replace as last into $target-node
+};
+
+declare function utils:if-then ($test as item()*,$result as item()*) as item()* {
+    if ($test)
+    then $result
+    else ()
 };
 

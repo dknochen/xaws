@@ -19,7 +19,8 @@
  : </p>
  :
  : @author Klaus Wichmann klaus [at] xquery [dot] co [dot] uk
- :)
+ : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+:)
 module namespace request = 'http://www.xquery.me/modules/xaws/helpers/request';
 
 import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
@@ -154,79 +155,59 @@ declare function request:href(
 (:~
  : Adds the Authorization header to the request according to 
  : <a href="http://docs.amazonwebservices.com/AmazonS3/latest/dev/index.html?RESTAuthentication.html">Amazon S3 RESTAuthentication</a>
- :  
-:)
+ :)
 declare updating function request:sign-v2(
-    $request as element(),
-    $host as xs:string,
-    $path as xs:string,
-    $parameters as element(parameter)*,
-    $aws-key as xs:string,
-    $aws-secret as xs:string) {
-    
-    request:sign-v2($request,$host,$path,(),$parameters,$aws-key,$aws-secret)
-    
+  $request as element(http:request),
+  $host as xs:string,
+  $path as xs:string,
+  $version as xs:string?,
+  $parameters as element(parameter)*,
+  $aws-key as xs:string,
+  $aws-secret as xs:string) 
+{
+  
+  let $date as xs:string := utils:timestamp()
+  let $signature-parameters :=
+      (
+          <parameter name="AWSAccessKeyId" value="{$aws-key}" />,
+          <parameter name="Timestamp" value="{$date}" />,
+          <parameter name="SignatureVersion" value="2" />,
+          <parameter name="SignatureMethod" value="HmacSHA1" />,
+          utils:if-then ($version,
+              <parameter name="Version" value="{$version}" />)
+      )
+  let $canonical as xs:string :=
+      (: trace( :)
+          string-join(
+              (
+                  (: method :)
+                  string($request/@method),"&#10;",
+                  
+                  $host,"&#10;",
+                  
+                  (: path :)
+                  $path,"&#10;",
+                  
+                  (: parameters :)
+                  string-join(
+                      for $param in ($parameters,$signature-parameters)
+                      let $name := encode-for-uri(string($param/@name))
+                      let $value := encode-for-uri(string($param/@value))
+                      order by $name
+                      return concat($name, "=",$value),"&amp;")
+             )
+          ,"")
+          (:,"canonicalString"):)
+  let $signature as xs:string := hmac:sha1($canonical,$aws-secret)
+  let $auth-param := <parameter name="Signature" value="{$signature}" />
+  let $new-href as xs:string :=
+      concat(
+          string($request/@href),"&amp;",
+          string-join(
+              for $param in ($signature-parameters,$auth-param)
+              let $name := encode-for-uri(string($param/@name))
+              let $value := encode-for-uri(string($param/@value))
+              order by $name
+              return concat($name, "=",$value),"&amp;"))
+  return replace value of node $request/@href with $new-href
 };
-
-(:~
- : Adds the Authorization header to the request according to 
- : <a href="http://docs.amazonwebservices.com/AmazonS3/latest/dev/index.html?RESTAuthentication.html">Amazon S3 RESTAuthentication</a>
- :  
-:)
-declare updating function request:sign-v2(
-    $request as element(),
-    $host as xs:string,
-    $path as xs:string,
-    $version as xs:string?,
-    $parameters as element(parameter)*,
-    $aws-key as xs:string,
-    $aws-secret as xs:string) {
-    
-    let $date as xs:string := utils:timestamp()
-    let $signature-parameters :=
-        (
-            <parameter name="AWSAccessKeyId" value="{$aws-key}" />,
-            <parameter name="Timestamp" value="{$date}" />,
-            <parameter name="SignatureVersion" value="2" />,
-            <parameter name="SignatureMethod" value="HmacSHA1" />,
-            if ($version)
-            then
-                <parameter name="Version" value="{$version}" />
-            else ()
-        )
-    let $canonical as xs:string :=
-        (: trace( :)
-            string-join(
-                (
-                    (: method :)
-                    string($request/@method),"&#10;",
-                    
-                    $host,"&#10;",
-                    
-                    (: path :)
-                    $path,"&#10;",
-                    
-                    (: parameters :)
-                    string-join(
-                        for $param in ($parameters,$signature-parameters)
-                        let $name := encode-for-uri(string($param/@name))
-                        let $value := encode-for-uri(string($param/@value))
-                        order by $name
-                        return concat($name, "=",$value),"&amp;")
-               )
-            ,"")
-            (:,"canonicalString"):)
-    let $signature as xs:string := hmac:sha1($canonical,$aws-secret)
-    let $auth-param := <parameter name="Signature" value="{$signature}" />
-    let $new-href as xs:string :=
-        concat(
-            string($request/@href),"&amp;",
-            string-join(
-                for $param in ($signature-parameters,$auth-param)
-                let $name := encode-for-uri(string($param/@name))
-                let $value := encode-for-uri(string($param/@value))
-                order by $name
-                return concat($name, "=",$value),"&amp;"))
-    return replace value of node $request/@href with $new-href
-};
-

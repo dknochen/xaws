@@ -20,11 +20,14 @@
  : </p>
  :
  : @author Klaus Wichmann klaus [at] xquery [dot] co [dot] uk
- :)
+ : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+:)
 module namespace request = 'http://www.xquery.me/modules/xaws/sns/request';
 
+import module namespace common_request = 'http://www.xquery.me/modules/xaws/helpers/request';
 import module namespace http = "http://expath.org/ns/http-client";
 import module namespace error = 'http://www.xquery.me/modules/xaws/sns/error';
+import module namespace utils = 'http://www.xquery.me/modules/xaws/helpers/utils';
 
 declare namespace ann = "http://www.zorba-xquery.com/annotations";
 
@@ -34,8 +37,24 @@ declare namespace ann = "http://www.zorba-xquery.com/annotations";
  :
  : @return the http response
 :)
-declare %ann:sequential function request:send($request as element(http:request)) as item()* {
-
+declare %ann:sequential function request:send(
+    $aws-config as element(aws-config)?,
+    $request as element(http:request),
+    $parameters as element(parameter)*) as item()* {
+    
+    (: sign the request :)
+    if($aws-config)
+    then
+      common_request:sign-v2(
+        $request,
+        "sns.us-east-1.amazonaws.com/",
+        "/",
+        (),
+        $parameters,
+        string($aws-config/aws-key/text()),
+        string($aws-config/aws-secret/text()))
+    else ();
+                  
     let $response := http:send-request($request)
     let $status := number($response[1]/@status)
     return
@@ -43,4 +62,5 @@ declare %ann:sequential function request:send($request as element(http:request))
         if($status = (200,204)) 
         then $response
         else error:throw($status,$response)
+
 };

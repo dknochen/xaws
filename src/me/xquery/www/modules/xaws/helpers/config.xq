@@ -19,7 +19,8 @@
  : </p>
  :
  : @author Klaus Wichmann klaus [at] xquery [dot] co [dot] uk
- :)
+ : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+:)
 module namespace config = 'http://www.xquery.me/modules/xaws/helpers/config';
 
 (:~

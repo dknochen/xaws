@@ -20,11 +20,14 @@
  : </p>
  :
  : @author Klaus Wichmann klaus [at] xquery [dot] co [dot] uk
- :)
+ : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+:)
 module namespace request = 'http://www.xquery.me/modules/xaws/sdb/request';
 
-import module namespace http = "http://expath.org/ns/http-client";
+import module namespace common_request = 'http://www.xquery.me/modules/xaws/helpers/request';
 import module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error';
+
+import module namespace http = "http://expath.org/ns/http-client";
 
 declare namespace ann = "http://www.zorba-xquery.com/annotations";
 
@@ -35,8 +38,21 @@ declare namespace ann = "http://www.zorba-xquery.com/annotations";
  :
  : @return the http response
 :)
-declare %ann:sequential function request:send($request as element(http:request)) as item()* {
+declare %ann:sequential function request:send(
+    $aws-config as element(aws-config),
+    $request as element(http:request),
+    $parameters as element(parameter)*) as item()* {
 
+    (: sign the request :)
+    common_request:sign-v2(
+        $request,
+        "sdb.amazonaws.com",
+        "/",
+        "2009-04-15",
+        $parameters,
+        string($aws-config/aws-key/text()),
+        string($aws-config/aws-secret/text()));
+                
     let $response := http:send-request($request)
     let $status := number($response[1]/@status)
     return
@@ -45,3 +61,4 @@ declare %ann:sequential function request:send($request as element(http:request))
         then $response
         else error:throw($status,$response)
 };
+

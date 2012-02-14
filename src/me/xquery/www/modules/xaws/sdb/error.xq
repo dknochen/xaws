@@ -20,7 +20,8 @@
  : </p>
  :
  : @author Klaus Wichmann klaus [at] xquery [dot] co [dot] uk
- :)
+ : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+:)
 module namespace error = 'http://www.xquery.me/modules/xaws/sdb/error';
 
 import module namespace http = "http://expath.org/ns/http-client";
