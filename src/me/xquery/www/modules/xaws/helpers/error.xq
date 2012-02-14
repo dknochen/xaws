@@ -70,9 +70,10 @@ declare function common_err:throw(
             typeswitch ($http_response[2])
                 case $resp as document-node() 
                     return 
-                        if($http_response[2]/Error)
-                        then $http_response[2]/Error
-                        else $http_response[2]
+                      switch (true())
+                        case ($http_response[2]/*:ErrorResponse/*:Error) return $http_response[2]/*:ErrorResponse/*:Error
+                        case ($http_response[2]/Error) return $http_response[2]/Error
+                        default return $http_response[2]
                 case $resp as xs:base64Binary 
                     return 
                         base64:decode($http_response[2])
@@ -81,7 +82,7 @@ declare function common_err:throw(
     let $error_code :=
         if($http_code eq -1)
         then "CONNECTION_FAILED" 
-        else $error_obj/Code/text()
+        else $error_obj//*:Code/text()
     let $message_node as element()? := 
         let $temp := common_err:get_message ($error_code, $http_code, $locale,$error_messages)
         return
@@ -100,7 +101,13 @@ declare function common_err:throw(
         then node-name($message_node)
         else xs:QName("common_err:UNEXPECTED_ERROR")
     
-    let $eo := fn:serialize($error_obj)
+    let $eo := fn:serialize($error_obj,
+      <output:serialization-parameters xmlns:output="http://www.w3.org/2010/xslt-xquery-serialization">
+        <output:method value="xml"/>
+        <output:version value="1.0"/>
+        <output:indent value="yes"/>
+        <output:omit-xml-declaration value="yes"/>
+      </output:serialization-parameters>)
     return 
         error($error_qname,$description,trace($error_obj,"ERROROBJ: "))
 };
