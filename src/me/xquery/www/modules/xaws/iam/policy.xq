@@ -463,7 +463,7 @@ declare function policy:create($policyDoc as element(Policy)) as xs:string {
 (:~
  : Internally used only
  :)
-declare function policy:create-part($nodes) {
+declare %fn:private function policy:create-part($nodes) {
   for $node in $nodes
   let $local-name := fn:local-name($node)
   let $name := if ($local-name eq "Key") then xs:string($node/@name) else $local-name
@@ -487,9 +487,9 @@ declare function policy:create-part($nodes) {
 };
 
 (:~
- : Internally used only
+ : Internally used only (Replacement for JSON serializer)
  :)
-declare function policy:json-serialize($json)  {  
+declare %fn:private function policy:json-serialize($json)  {  
     if ($json/@type="object")
     then fn:concat("{",policy:json-serializeMulti($json/element()),"}")
     else if ($json/@type="array")
@@ -500,9 +500,9 @@ declare function policy:json-serialize($json)  {
 }; 
 
 (:~
- : Internally used only
+ : Internally used only (Replacement for JSON serializer)
  :)
-declare function policy:json-serializeMulti($json)  {
+declare %fn:private function policy:json-serializeMulti($json)  {
   fn:string-join(
     for $j in $json
     return

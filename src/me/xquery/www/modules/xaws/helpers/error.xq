@@ -109,7 +109,7 @@ declare function common_err:throw(
         <output:omit-xml-declaration value="yes"/>
       </output:serialization-parameters>)
     return 
-        error($error_qname,$description,trace($error_obj,"ERROROBJ: "))
+        error($error_qname,$description, $error_obj)
 };
 
 
