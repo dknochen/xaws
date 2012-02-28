@@ -66,6 +66,40 @@ declare %ann:sequential function request:send(
 };
 
 (:~
+ : send an http request to the security token service (STS) and return the response which is usually a pair of two items: One item containing the response
+ : headers, status code,... and one item representing the response body (if any).
+ :
+ : @return the http response
+:)
+declare %ann:sequential function request:send-sts(
+    $aws-config as element(aws-config)?,
+    $request as element(http:request),
+    $parameters as element(parameter)*) as item()* {
+    
+    (: sign the request :)
+    if($aws-config)
+    then
+      common_request:sign-v2(
+        $request,
+        "sts.amazonaws.com",
+        "/",
+        "2011-06-15" (: API version :),
+        $parameters,
+        string($aws-config/aws-key/text()),
+        string($aws-config/aws-secret/text()));
+    else ();
+                  
+    let $response := http:send-request($request)
+    let $status := number($response[1]/@status)
+    return
+        
+        if($status = (200,204)) 
+        then $response
+        else error:throw($status,$response)
+
+};
+
+(:~
  : creates an http request URL using the https protocol. IAM does only support https.
  :
  : @param $aws-config The aws-config element containing authentication information for connections

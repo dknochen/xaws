@@ -20,6 +20,7 @@
  : </p>
  :
  : @author Dennis Knochenwefel dennis [at] xquery [dot] co [dot] uk
+ : @author Alexander Kreutz alexander [dot] kreutz [at] 28msec [dot] com
 :)
 module namespace error = 'http://www.xquery.me/modules/xaws/iam/error';
 
@@ -80,7 +81,24 @@ declare variable $error:messages :=
       <error:NOSUCHENTITY locale="{$common_error:LOCALE_EN}" param="0" http-code="404" code="NoSuchEntity" http-error="404 Not Found">
         The request was rejected because it referenced an entity that does not exist. 
         The error message describes the entity.</error:NOSUCHENTITY>
+        
+      <!-- DeleteGroup -->
+      <error:DELETECONFLICT locale="{$common_error:LOCALE_EN}" param="0" http-code="409" code="DeleteConflict" http-error="409 Conflict">
+         The request was rejected because it attempted to delete a resource that has attached subordinate entities. 
+         The error message describes these entities.</error:DELETECONFLICT>
+         
+      <!-- DeleteLoginProfile -->
+      <error:ENTITYTEMPORARILYUNMODIFIABLE locale="{$common_error:LOCALE_EN}" param="0" http-code="409" code="EntityTemporarilyUnmodifiable" http-error="409 Conflict">    
+         The request was rejected because it referenced an entity that is temporarily unmodifiable, such as a user name that was deleted and then recreated. 
+         The error indicates that the request is likely to succeed if you try again after waiting several minutes. 
+         The error message describes the entity.</error:ENTITYTEMPORARILYUNMODIFIABLE>    
       
+     <!-- STS errors -->
+     <error:MALFORMEDPOLICYDOCUMENT locale="{$common_error:LOCALE_EN}" param="0" http-code="400" code="MalformedPolicyDocument" http-error="400 Bad Request">
+         The request was rejected because the policy document was malformed. The error message describes the specific error.</error:MALFORMEDPOLICYDOCUMENT>
+     <error:PACKEDPOLICYTOOLARGE local="{$common_error:LOCALE_EN}" param="0" http-code="400" code="PackedPolicyTooLarge" http-error="400 Bad Request">
+         The request was rejected because the policy document was too large. The error message describes how big the policy document is, in packed form, as a percentage of what the API allows.</error:PACKEDPOLICYTOOLARGE>
+                      
     </error:messages>;
 
 (:~
