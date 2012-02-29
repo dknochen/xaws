@@ -15,3 +15,5 @@
 DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/error" VERSION 1.0 FILE "error.xq")
 DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/request" VERSION 1.0 FILE "request.xq")
 DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/user" VERSION 1.0 FILE "user.xq")
+DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/policy" VERSION 1.0 FILE "policy.xq")
+DECLARE_ZORBA_MODULE (URI "http://www.xquery.me/modules/xaws/iam/sts" VERSION 1.0 FILE "sts.xq")

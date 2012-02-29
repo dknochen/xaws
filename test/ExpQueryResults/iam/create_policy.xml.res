@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GetUserPolicyResult xmlns="https://iam.amazonaws.com/doc/2010-05-08/"><PolicyName>DemoPolicy</PolicyName><UserName>TestUser</UserName><PolicyDocument>%7B%22Statement%22%20%3A%20%7B%22Action%22%20%3A%20%22ec2%3ADescribe%2A%22%2C%22Resource%22%20%3A%20%22%2A%22%2C%22Effect%22%20%3A%20%22Allow%22%7D%7D</PolicyDocument></GetUserPolicyResult>

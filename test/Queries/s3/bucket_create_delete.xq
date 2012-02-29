@@ -1,5 +1,5 @@
 import module namespace system = "http://www.zorba-xquery.com/modules/system";
-
+ 
 import module namespace bucket = 'http://www.xquery.me/modules/xaws/s3/bucket';
 import module namespace error = 'http://www.xquery.me/modules/xaws/helpers/error';
 import module namespace config = "http://www.xquery.me/modules/xaws/s3/config";
@@ -44,6 +44,6 @@ bucket:create($aws-config,<create-config><acl>public-read</acl></create-config>,
     }
   else 
     $msg := ("Bucket was not created: ",error:serialize($result));
-}
 
-<test success="{$success}">{$msg}</test>
+  <test success="{$success}">{$msg}</test>
+}
